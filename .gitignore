@@ -1,0 +1,15 @@
+# Godot
+.godot/
+*.import
+export/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# IDE
+.vscode/
+*.swp
+
+# Claude Code
+.claude/

@@ -123,7 +123,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - 此规则适用于所有游戏内容：UI文本、事件文本、角色名、道具名等
 
 ### 已完成设计
-- 随机事件系统（详见 `docs/superpowers/specs/2026-03-17-random-event-system-design.md`）
+- 随机事件系统（详见 `docs/specs/2026-03-17-random-event-system-design.md`）
 
 ### 待讨论
 - 入场资源的具体设定名称
