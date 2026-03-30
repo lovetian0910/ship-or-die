@@ -170,6 +170,9 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - 随机事件系统（详见 `docs/specs/2026-03-17-random-event-system-design.md`）
 - 入场资源命名（鹅皇互娱主创 / 外包铁军 / 万能商务，各3级）
 - 研发流程可选节点（中期：内测验证 / 后期：临上线打磨）
+- 打类事件小游戏"代码急救"（策略拼图，一套引擎复用多事件）
+- 美术策略（像素风，AI生图+itch.io素材包，总投入约2.5小时）
+- 完整Demo设计规格（详见 `docs/specs/2026-03-30-game-demo-full-spec.md`）
 
 ### 待讨论
 - （暂无）
