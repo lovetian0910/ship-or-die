@@ -1,0 +1,28 @@
+[gd_resource type="Resource" script_class="EventData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/resources/event_data.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+event_id = "fight_survivor_01"
+title = "代码库虫群爆发"
+description = "你的CI/CD流水线突然全线飘红——不是编译错误，是字面意义上的虫子！成群的bug从未知的依赖库涌出，正在吞噬你的代码。只有一个办法：拿起键盘，手动消灭它们。"
+event_type = 1
+search_benefit_type = 0
+search_benefit_value = 0.0
+search_benefit_desc = ""
+search_month_cost = 0
+fight_preset_path = "res://resources/minigame_presets/bug_swarm.tres"
+minigame_type = "bug_survivor"
+fight_conservative_desc = "虫子吞噬了代码：品质 -6"
+fight_conservative_quality = -6.0
+fight_conservative_month_cost = 1
+fight_steady_desc = "控制住了局面：消除品质损失"
+fight_steady_quality = 0.0
+fight_steady_month_cost = 0
+fight_risky_desc = "彻底清除并重构：消除损失 + 品质 +3"
+fight_risky_quality = 3.0
+fight_risky_speed_bonus = 0.0
+fight_risky_month_cost = 0
+allowed_phases = [&"early", &"mid", &"late"]
+is_fixed = false

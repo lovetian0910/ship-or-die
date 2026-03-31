@@ -1,0 +1,15 @@
+[gd_resource type="Resource" script_class="BugSurvivorPreset" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/resources/bug_survivor_preset.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+preset_id = "bug_invasion"
+preset_name = "虫族入侵"
+flavor_text = "紧急警报！一个未知的开源依赖引入了虫族母巢——虫子以双倍速度从四面八方涌来。你的键盘就是最后的防线！"
+bug_base_speed = 100.0
+player_speed_override = 0.0
+bullet_interval_override = 0.0
+game_duration_override = 0.0
+spawn_interval_scale = 0.7
+speed_scale = 1.3

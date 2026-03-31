@@ -1,0 +1,28 @@
+[gd_resource type="Resource" script_class="EventData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/resources/event_data.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+event_id = "fight_survivor_02"
+title = "虫族母巢入侵"
+description = "噩梦升级了——那个你一直没空升级的第三方库，原来藏着一个虫族母巢。虫子以惊人的速度繁殖，你的代码库正在沦陷。这次不是debug，是真正的战斗。"
+event_type = 1
+search_benefit_type = 0
+search_benefit_value = 0.0
+search_benefit_desc = ""
+search_month_cost = 0
+fight_preset_path = "res://resources/minigame_presets/bug_invasion.tres"
+minigame_type = "bug_survivor"
+fight_conservative_desc = "代码库被严重破坏：品质 -8，耽误 2 个月"
+fight_conservative_quality = -8.0
+fight_conservative_month_cost = 2
+fight_steady_desc = "勉强守住了：消除品质损失"
+fight_steady_quality = 0.0
+fight_steady_month_cost = 0
+fight_risky_desc = "英勇歼灭全部虫族：品质 +5，效率永久 +10%"
+fight_risky_quality = 5.0
+fight_risky_speed_bonus = 0.1
+fight_risky_month_cost = 0
+allowed_phases = [&"mid", &"late"]
+is_fixed = false

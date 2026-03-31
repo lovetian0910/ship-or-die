@@ -1,0 +1,15 @@
+[gd_resource type="Resource" script_class="BugSurvivorPreset" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/resources/bug_survivor_preset.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+preset_id = "bug_swarm"
+preset_name = "虫群爆发"
+flavor_text = "服务器日志里突然出现了大量异常——不是普通的bug，是成群结队的虫子！它们正在吞噬你的代码库，赶紧拿起键盘消灭它们！"
+bug_base_speed = 80.0
+player_speed_override = 0.0
+bullet_interval_override = 0.0
+game_duration_override = 0.0
+spawn_interval_scale = 1.0
+speed_scale = 1.0
