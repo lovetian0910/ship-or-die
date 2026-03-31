@@ -34,7 +34,7 @@ const QUALITY_CAP: Dictionary = {
 }
 
 ## ===== 品质积累（每消耗1个月，品质增加多少）=====
-const QUALITY_PER_MONTH: float = 1.5            ## 基础品质增长/月
+const QUALITY_PER_MONTH: float = 2.2            ## 基础品质增长/月
 
 ## ===== 外包效率倍率（影响品质积累速度，同样时间积累更多品质）=====
 const OUTSOURCE_SPEED: Dictionary = {
@@ -68,6 +68,28 @@ const EVENT_SEARCH_COST_LARGE: int = 3          ## 搜类-大收益
 const EVENT_CRISIS_CONSERVATIVE_COST: int = 0   ## 保守选项-不消耗时间但受惩罚
 const EVENT_CRISIS_STEADY_COST: int = 1         ## 稳妥选项
 const EVENT_CRISIS_RISKY_COST: int = 3          ## 冒险选项
+
+## ===== 结算：市场参数 =====
+const SETTLEMENT_USERS_MIN: int = 2400          ## 用户池下限
+const SETTLEMENT_USERS_MAX: int = 4800          ## 用户池上限
+const SETTLEMENT_PAY_MIN: float = 0.6           ## 付费能力下限
+const SETTLEMENT_PAY_MAX: float = 1.25          ## 付费能力上限
+
+## ===== 结算：品质门槛（空窗期收入的品质修正）=====
+## 品质 < 此值时，空窗期收入按比例衰减；品质=0 仅获得最低保底
+const SETTLEMENT_QUALITY_BASELINE: float = 40.0 ## 品质基准线（此值品质因子=1.0）
+const SETTLEMENT_QUALITY_FLOOR: float = 0.15    ## 品质=0 时的最低收入比例
+const SETTLEMENT_WINDOW_CAP: float = 0.12       ## 空窗期比例上限（防止早期上线吃满）
+
+## ===== 结算：竞品饱和惩罚 =====
+## 每个已上线竞品对存量用户池的压缩比例
+const SETTLEMENT_COMP_SATURATION: float = 0.10  ## 每个竞品压缩10%存量池
+
+## ===== 结算：市场成熟度（时间→可触达用户比例）=====
+## 上线越早，市场中可触达的用户越少（用户池随时间释放）
+## maturity = MATURITY_FLOOR + (1.0 - MATURITY_FLOOR) * (elapsed/total)^MATURITY_POWER
+const SETTLEMENT_MATURITY_FLOOR: float = 0.45   ## 最早上线也能触达45%用户
+const SETTLEMENT_MATURITY_POWER: float = 1.0    ## 幂次：1.0=线性增长
 
 ## ===== 市场热度 =====
 const HEAT_UPDATE_PER_MONTH: bool = true        ## 每过1个月更新一次热度

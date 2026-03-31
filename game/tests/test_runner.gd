@@ -655,41 +655,90 @@ func _run_settlement_calculator_test() -> void:
 	_log_section("结算计算器测试")
 
 	# 热度乘数查表
-	_assert(SettlementCalculator.get_heat_multiplier(10.0) == 0.3, "热度10 → 0.3x")
-	_assert(SettlementCalculator.get_heat_multiplier(30.0) == 0.6, "热度30 → 0.6x")
+	_assert(SettlementCalculator.get_heat_multiplier(10.0) == 0.4, "热度10 → 0.4x")
+	_assert(SettlementCalculator.get_heat_multiplier(30.0) == 0.7, "热度30 → 0.7x")
 	_assert(SettlementCalculator.get_heat_multiplier(50.0) == 1.0, "热度50 → 1.0x")
-	_assert(SettlementCalculator.get_heat_multiplier(70.0) == 1.5, "热度70 → 1.5x")
-	_assert(SettlementCalculator.get_heat_multiplier(90.0) == 2.0, "热度90 → 2.0x")
+	_assert(SettlementCalculator.get_heat_multiplier(70.0) == 1.3, "热度70 → 1.3x")
+	_assert(SettlementCalculator.get_heat_multiplier(90.0) == 1.6, "热度90 → 1.6x")
 
-	# 完整计算
+	# 品质因子测试
+	var qf_zero: float = SettlementCalculator.get_quality_factor(0.0)
+	_assert(is_equal_approx(qf_zero, Config.SETTLEMENT_QUALITY_FLOOR), "品质0 → floor=%.2f" % qf_zero)
+	var qf_baseline: float = SettlementCalculator.get_quality_factor(Config.SETTLEMENT_QUALITY_BASELINE)
+	_assert(is_equal_approx(qf_baseline, 1.0), "品质baseline → 1.0: %.2f" % qf_baseline)
+	var qf_high: float = SettlementCalculator.get_quality_factor(100.0)
+	_assert(qf_high > 1.0, "品质100 → >1.0: %.2f" % qf_high)
+
+	# 完整计算（时间线分段结算）
 	var result: Dictionary = SettlementCalculator.calculate({
-		"total_users": 3000,
-		"pay_ability": 1.0,
-		"window_ratio": 0.3,
+		"total_users": 2000,
+		"pay_ability": 0.8,
 		"heat": 50.0,
 		"player_quality": 60.0,
-		"competitor_qualities": [40.0, 30.0],
+		"player_launch_month": 15,
+		"total_months": 36,
+		"competitors": [
+			{"quality": 40.0, "launch_month": 20},
+			{"quality": 30.0, "launch_month": 28},
+		],
 	})
 
 	_assert(result.has("total_revenue"), "结果含 total_revenue")
 	_assert(result.has("window_revenue"), "结果含 window_revenue")
-	_assert(result.has("share_revenue"), "结果含 share_revenue")
+	_assert(result.has("compete_revenue"), "结果含 compete_revenue")
+	_assert(result.has("window_months"), "结果含 window_months")
+	_assert(result.has("compete_months"), "结果含 compete_months")
 
 	var total_rev: float = result.get("total_revenue", 0.0) as float
 	_assert(total_rev > 0, "总收益 > 0: %.0f" % total_rev)
-	_log_info("结算测试: 用户3000, 品质60, 热度50 → 收益 %.0f" % total_rev)
+
+	# 独占月份应该 > 0（竞品2在25月上线，玩家20月~25月有独占）
+	var win_months: int = result.get("window_months", 0) as int
+	_assert(win_months > 0, "有独占月份: %d" % win_months)
+	# 竞争月份也应该 > 0（竞品1在12月上线，竞品2在25月上线）
+	var comp_months: int = result.get("compete_months", 0) as int
+	_assert(comp_months > 0, "有竞争月份: %d" % comp_months)
+
+	_log_info("时间线结算: 独占%d月 + 竞争%d月 = 收益%.0f" % [win_months, comp_months, total_rev])
 
 	# 品质越高收益越高
 	var result_high: Dictionary = SettlementCalculator.calculate({
-		"total_users": 3000,
+		"total_users": 2000,
 		"pay_ability": 1.0,
-		"window_ratio": 0.3,
 		"heat": 50.0,
 		"player_quality": 90.0,
-		"competitor_qualities": [40.0, 30.0],
+		"player_launch_month": 20,
+		"total_months": 36,
+		"competitors": [{"quality": 40.0, "launch_month": 22}],
+	})
+	var result_low_q: Dictionary = SettlementCalculator.calculate({
+		"total_users": 2000,
+		"pay_ability": 1.0,
+		"heat": 50.0,
+		"player_quality": 30.0,
+		"player_launch_month": 20,
+		"total_months": 36,
+		"competitors": [{"quality": 40.0, "launch_month": 22}],
 	})
 	var total_high: float = result_high.get("total_revenue", 0.0) as float
-	_assert(total_high > total_rev, "品质90收益 > 品质60收益: %.0f > %.0f" % [total_high, total_rev])
+	var total_low_q: float = result_low_q.get("total_revenue", 0.0) as float
+	_assert(total_high > total_low_q, "品质90收益 > 品质30收益: %.0f > %.0f" % [total_high, total_low_q])
+
+	# 早上线 vs 晚上线（竞品在月15上线）
+	var result_early: Dictionary = SettlementCalculator.calculate({
+		"total_users": 2000, "pay_ability": 1.0, "heat": 50.0,
+		"player_quality": 50.0, "player_launch_month": 10, "total_months": 36,
+		"competitors": [{"quality": 50.0, "launch_month": 15}],
+	})
+	var result_late: Dictionary = SettlementCalculator.calculate({
+		"total_users": 2000, "pay_ability": 1.0, "heat": 50.0,
+		"player_quality": 50.0, "player_launch_month": 28, "total_months": 36,
+		"competitors": [{"quality": 50.0, "launch_month": 15}],
+	})
+	var early_rev: float = result_early.get("total_revenue", 0.0) as float
+	var late_rev: float = result_late.get("total_revenue", 0.0) as float
+	# 早上线有更多独占月，但后续全是竞争月；晚上线运营期短但竞争少不了
+	_log_info("早上线(月10)=%.0f vs 晚上线(月28)=%.0f" % [early_rev, late_rev])
 
 
 ## ===== 迷雾地图测试 =====

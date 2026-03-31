@@ -151,8 +151,8 @@ func get_pending_count() -> int:
 func _on_time_tick(remaining: float, elapsed: float, total: float) -> void:
 	if not _initialized:
 		return
-	# 过滤掉小游戏 tick（total < 100 说明是实时秒）
-	if total < 100.0:
+	# 过滤掉小游戏 tick（小游戏期间由 TimeManager 实时发射 tick，不是月份制）
+	if TimeManager.minigame_running:
 		return
 
 	var current_month := int(elapsed)

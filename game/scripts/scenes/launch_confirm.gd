@@ -93,35 +93,35 @@ func _get_fuzzy_quality(score: float) -> String:
 
 ## ===== 确认上线 =====
 func _on_confirm() -> void:
-	# 收集结算参数
 	var topic_id: StringName = StringName(str(GameManager.run_data.get("topic", "")))
 	var player_quality: float = float(GameManager.run_data.get("quality", 0.0))
 	var heat: float = MarketHeat.get_heat(topic_id)
-
-	# 计算空窗期比例：玩家上线月份之前已上线竞品占总时间比例
-	var elapsed: int = TimeManager.elapsed_months
+	var player_launch: int = TimeManager.elapsed_months
 	var total: int = TimeManager.total_months
-	var window_ratio: float = _calc_window_ratio(topic_id, elapsed, total)
 
-	# 收集已上线竞品品质和名字
-	var comp_qualities: Array = []
+	# 收集所有竞品信息（含未来会上线的）
+	var competitors: Array[Dictionary] = []
 	var comp_names: Array = []
 	for comp: AICompetitorData in AICompetitors.get_competitors():
+		competitors.append({
+			"quality": comp.quality,
+			"launch_month": comp.planned_launch_month,
+		})
 		if comp.launched:
-			comp_qualities.append(comp.quality)
 			comp_names.append(comp.competitor_name)
 
-	# 生成随机市场参数（每局固定种子，Demo简化：直接随机）
-	var total_users: int = randi_range(1000, 5000)
-	var pay_ability: float = randf_range(0.5, 2.0)
+	# 随机市场参数
+	var total_users: int = randi_range(Config.SETTLEMENT_USERS_MIN, Config.SETTLEMENT_USERS_MAX)
+	var pay_ability: float = randf_range(Config.SETTLEMENT_PAY_MIN, Config.SETTLEMENT_PAY_MAX)
 
 	var result: Dictionary = SettlementCalculator.calculate({
 		"total_users": total_users,
 		"pay_ability": pay_ability,
-		"window_ratio": window_ratio,
 		"heat": heat,
 		"player_quality": player_quality,
-		"competitor_qualities": comp_qualities,
+		"player_launch_month": player_launch,
+		"total_months": total,
+		"competitors": competitors,
 	})
 
 	var earnings: int = int(result.get("total_revenue", 0))
@@ -132,7 +132,6 @@ func _on_confirm() -> void:
 	GameManager.run_data["_settlement_earnings"] = earnings
 	GameManager.run_data["_settlement_comp_names"] = comp_names
 
-	# 调用 GameManager 结算
 	GameManager.end_run_success(earnings)
 	GameManager.transition_to(GameManager.GameState.SETTLEMENT)
 
@@ -142,32 +141,8 @@ func _on_cancel() -> void:
 	GameManager.transition_to(GameManager.GameState.DEV_RUNNING)
 
 
-## ===== 计算空窗期比例 =====
-## 玩家上线时，距离最近的已上线竞品之间的月份间隔 / 总月份
-func _calc_window_ratio(topic_id: StringName, elapsed_months: int, total_months_count: int) -> float:
-	if total_months_count <= 0:
-		return 0.0
-
-	# 找最晚上线的竞品月份（在玩家之前）
-	var latest_comp_month: int = 0
-	var any_launched: bool = false
-	for comp: AICompetitorData in AICompetitors.get_competitors():
-		if comp.launched and comp.planned_launch_month < elapsed_months:
-			if comp.planned_launch_month > latest_comp_month:
-				latest_comp_month = comp.planned_launch_month
-				any_launched = true
-
-	if not any_launched:
-		# 无竞品上线 → 从0到玩家上线月全是空窗
-		return clampf(float(elapsed_months) / float(total_months_count), 0.0, 1.0)
-
-	var gap: int = elapsed_months - latest_comp_month
-	return clampf(float(gap) / float(total_months_count), 0.0, 1.0)
-
-
 ## ===== 市场份额预估 =====
 func _update_share_estimate(player_quality: float, comp_qualities: Array) -> void:
-	# 简化份额估算：品质权重分配（与结算公式一致）
 	var total_quality: float = player_quality
 	for q: Variant in comp_qualities:
 		total_quality += float(q)
@@ -176,25 +151,21 @@ func _update_share_estimate(player_quality: float, comp_qualities: Array) -> voi
 	if total_quality > 0.0:
 		share_ratio = player_quality / total_quality
 	elif player_quality <= 0.0 and comp_qualities.is_empty():
-		share_ratio = 1.0  # 无竞品无品质 = 100%
+		share_ratio = 1.0
 	else:
-		share_ratio = 1.0  # 无竞品 = 100%
+		share_ratio = 1.0
 
-	# 加模糊偏差（±5%）让玩家不能精确计算
 	var display_ratio: float = clampf(share_ratio + randf_range(-0.05, 0.05), 0.0, 1.0)
 	var percent: int = int(display_ratio * 100.0)
 
-	# 更新进度条
 	var bar_parent: ColorRect = share_bar_fill.get_parent() as ColorRect
 	var bar_width: float = bar_parent.custom_minimum_size.x
 	if bar_width <= 0.0:
-		bar_width = 450.0  # fallback
+		bar_width = 450.0
 	share_bar_fill.offset_right = bar_width * display_ratio
 
-	# 更新标签
 	share_label.text = "~%d%%" % percent
 
-	# 颜色反馈
 	if display_ratio >= 0.5:
 		share_bar_fill.color = Color(0.2, 0.8, 0.3, 0.85)
 		share_hint.text = "市场份额可观，可以考虑上线"

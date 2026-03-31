@@ -102,8 +102,8 @@ func get_topics() -> Array[TopicData]:
 func _on_time_tick(remaining: float, elapsed: float, total: float) -> void:
 	if not _initialized:
 		return
-	# 只在小游戏未运行时更新（小游戏 tick 的 total 是实时秒数，不是月份）
-	if total < 100.0:
+	# 只在小游戏未运行时更新（小游戏 tick 是实时秒，不是月份）
+	if TimeManager.minigame_running:
 		return
 	_update_heat(int(elapsed))
 
