@@ -1,5 +1,6 @@
-[gd_resource type="Theme" load_steps=13 format=3]
+[gd_resource type="Theme" load_steps=14 format=3]
 
+[ext_resource type="FontFile" path="res://assets/fonts/NotoSansSC-Regular.ttf" id="cjk_font"]
 [ext_resource type="StyleBox" path="res://resources/theme/styles/panel_style.tres" id="panel_style"]
 [ext_resource type="StyleBox" path="res://resources/theme/styles/panel_container_style.tres" id="panel_container_style"]
 [ext_resource type="StyleBox" path="res://resources/theme/styles/btn_normal.tres" id="btn_normal"]
@@ -14,6 +15,7 @@
 [ext_resource type="StyleBox" path="res://resources/theme/styles/line_edit_focus.tres" id="line_edit_focus"]
 
 [resource]
+default_font = ExtResource("cjk_font")
 default_font_size = 16
 
 Button/colors/font_color = Color(0.91, 0.91, 0.91, 1)
