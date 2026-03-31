@@ -94,7 +94,7 @@ theme_override_constants/separation = 3
 unique_name_in_owner = true
 layout_mode = 2
 text = ""
-theme_override_font_sizes/font_size = 13
+theme_override_font_sizes/font_size = 15
 theme_override_colors/font_color = Color(0.6, 0.6, 0.6, 1)
 
 [node name="ShareSection" type="VBoxContainer" parent="CenterContainer/PanelContainer/MarginContainer/VBoxContainer/SummaryBox"]
@@ -104,7 +104,7 @@ theme_override_constants/separation = 4
 [node name="ShareTitle" type="Label" parent="CenterContainer/PanelContainer/MarginContainer/VBoxContainer/SummaryBox/ShareSection"]
 layout_mode = 2
 text = "🎯 市场份额预估："
-theme_override_font_sizes/font_size = 15
+theme_override_font_sizes/font_size = 17
 theme_override_colors/font_color = Color(0.9, 0.8, 0.3, 1)
 
 [node name="ShareBarBG" type="ColorRect" parent="CenterContainer/PanelContainer/MarginContainer/VBoxContainer/SummaryBox/ShareSection"]
@@ -128,13 +128,13 @@ anchor_bottom = 1.0
 horizontal_alignment = 1
 vertical_alignment = 1
 text = "~50%"
-theme_override_font_sizes/font_size = 13
+theme_override_font_sizes/font_size = 15
 
 [node name="ShareHint" type="Label" parent="CenterContainer/PanelContainer/MarginContainer/VBoxContainer/SummaryBox/ShareSection"]
 unique_name_in_owner = true
 layout_mode = 2
 text = "品质越高、竞品越少，份额越大"
-theme_override_font_sizes/font_size = 11
+theme_override_font_sizes/font_size = 14
 theme_override_colors/font_color = Color(0.5, 0.5, 0.5, 1)
 
 [node name="HSeparator2" type="HSeparator" parent="CenterContainer/PanelContainer/MarginContainer/VBoxContainer"]

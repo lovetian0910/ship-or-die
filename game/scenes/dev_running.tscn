@@ -38,7 +38,7 @@ theme_override_constants/separation = 20
 unique_name_in_owner = true
 layout_mode = 2
 text = "已探索 1 格"
-theme_override_font_sizes/font_size = 18
+theme_override_font_sizes/font_size = 20
 theme_override_colors/font_color = Color(0.9, 0.8, 0.3, 1)
 
 [node name="TopSpacer" type="Control" parent="MarginContainer/MainVBox/TopBar"]
@@ -49,7 +49,7 @@ size_flags_horizontal = 3
 unique_name_in_owner = true
 layout_mode = 2
 text = "粗糙（未验证）"
-theme_override_font_sizes/font_size = 18
+theme_override_font_sizes/font_size = 20
 theme_override_colors/font_color = Color(0.6, 0.85, 1.0, 1)
 
 [node name="HSeparator1" type="HSeparator" parent="MarginContainer/MainVBox"]
@@ -88,14 +88,14 @@ theme_override_constants/separation = 4
 [node name="QualityTitle" type="Label" parent="MarginContainer/MainVBox/ContentHBox/SidePanel/QualitySection/QualityVBox"]
 layout_mode = 2
 text = "当前品质评估"
-theme_override_font_sizes/font_size = 13
+theme_override_font_sizes/font_size = 15
 theme_override_colors/font_color = Color(0.7, 0.7, 0.7, 1)
 
 [node name="QualityHint" type="Label" parent="MarginContainer/MainVBox/ContentHBox/SidePanel/QualitySection/QualityVBox"]
 unique_name_in_owner = true
 layout_mode = 2
 text = "品质评估可能存在偏差"
-theme_override_font_sizes/font_size = 11
+theme_override_font_sizes/font_size = 14
 theme_override_colors/font_color = Color(0.5, 0.5, 0.5, 1)
 
 [node name="CompetitorPanel" type="PanelContainer" parent="MarginContainer/MainVBox/ContentHBox/SidePanel"]
@@ -109,7 +109,7 @@ theme_override_constants/separation = 3
 [node name="CompetitorTitle" type="Label" parent="MarginContainer/MainVBox/ContentHBox/SidePanel/CompetitorPanel/CompetitorVBox"]
 layout_mode = 2
 text = "⚔️ 竞争态势"
-theme_override_font_sizes/font_size = 13
+theme_override_font_sizes/font_size = 15
 theme_override_colors/font_color = Color(0.9, 0.7, 0.3, 1)
 
 [node name="CompetitorList" type="VBoxContainer" parent="MarginContainer/MainVBox/ContentHBox/SidePanel/CompetitorPanel/CompetitorVBox"]
@@ -121,14 +121,14 @@ theme_override_constants/separation = 2
 unique_name_in_owner = true
 layout_mode = 2
 text = "📊 市场热度：未知"
-theme_override_font_sizes/font_size = 12
+theme_override_font_sizes/font_size = 14
 theme_override_colors/font_color = Color(0.7, 0.7, 0.7, 1)
 
 [node name="CompetitorSummary" type="Label" parent="MarginContainer/MainVBox/ContentHBox/SidePanel/CompetitorPanel/CompetitorVBox"]
 unique_name_in_owner = true
 layout_mode = 2
 text = "已上线：0 款 | 潜伏中：0 家"
-theme_override_font_sizes/font_size = 11
+theme_override_font_sizes/font_size = 14
 theme_override_colors/font_color = Color(0.5, 0.5, 0.5, 1)
 
 [node name="HSeparator2" type="HSeparator" parent="MarginContainer/MainVBox/ContentHBox/SidePanel"]
@@ -137,7 +137,7 @@ layout_mode = 2
 [node name="EventLogTitle" type="Label" parent="MarginContainer/MainVBox/ContentHBox/SidePanel"]
 layout_mode = 2
 text = "开发日志"
-theme_override_font_sizes/font_size = 13
+theme_override_font_sizes/font_size = 15
 theme_override_colors/font_color = Color(0.7, 0.7, 0.7, 1)
 
 [node name="EventLog" type="VBoxContainer" parent="MarginContainer/MainVBox/ContentHBox/SidePanel"]
@@ -151,14 +151,14 @@ unique_name_in_owner = true
 layout_mode = 2
 custom_minimum_size = Vector2(0, 45)
 text = "🚀 强制上线！"
-theme_override_font_sizes/font_size = 16
+theme_override_font_sizes/font_size = 18
 
 [node name="BottomHint" type="Label" parent="MarginContainer/MainVBox"]
 unique_name_in_owner = true
 layout_mode = 2
 text = "点击迷雾格子探索"
 horizontal_alignment = 1
-theme_override_font_sizes/font_size = 13
+theme_override_font_sizes/font_size = 15
 theme_override_colors/font_color = Color(0.5, 0.5, 0.5, 1)
 
 [node name="ToastLayer" type="CanvasLayer" parent="."]
@@ -172,7 +172,7 @@ offset_bottom = 40.0
 horizontal_alignment = 1
 vertical_alignment = 1
 text = ""
-theme_override_font_sizes/font_size = 15
+theme_override_font_sizes/font_size = 17
 theme_override_colors/font_color = Color(1, 1, 1, 1)
 modulate = Color(1, 1, 1, 0)
 

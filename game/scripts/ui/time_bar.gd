@@ -25,6 +25,15 @@ func _ready() -> void:
 
 	EventBus.time_tick.connect(_on_time_tick)
 	EventBus.time_warning.connect(_on_time_warning)
+	EventBus.run_started.connect(_on_run_started)
+
+
+func _on_run_started() -> void:
+	_is_warning = false
+	fill.color = COLOR_NORMAL
+	fill.modulate.a = 1.0
+	fill.anchor_right = 1.0
+	time_label.text = ""
 
 
 func _on_time_tick(remaining: float, _elapsed: float, total: float) -> void:

@@ -29,6 +29,21 @@ var _loading_months_consumed: int = 0     ## 已触发的月数 tick
 ## 绘制层节点（在所有子节点之上绘制进度环）
 var _draw_layer: Control = null
 
+## 图标图片节点（揭开后显示）
+var _icon_rect: TextureRect = null
+
+## 迷雾问号晃动动画 Tween
+var _wobble_tween: Tween = null
+
+## 呼吸脉冲动画 Tween
+var _breath_tween: Tween = null
+
+## 呼吸脉冲原始背景色
+var _breath_base_color: Color = COLOR_FOGGY
+
+## 图标纹理缓存（static 级别，所有格子共用）
+static var _icon_tex_cache: Dictionary = {}
+
 ## 子节点
 @onready var bg_rect: ColorRect = $BG
 @onready var icon_label: Label = $IconLabel
@@ -47,17 +62,32 @@ const COLOR_EXIT: Color = Color(0.8, 0.45, 0.1, 1.0)           ## 出口-橙
 const COLOR_WALL: Color = Color(0.08, 0.08, 0.08, 1.0)         ## 路障-黑
 const COLOR_START: Color = Color(0.3, 0.5, 0.7, 1.0)           ## 起点-蓝
 
-## 类型图标
-const TYPE_ICONS: Dictionary = {
-	FogMap.CellType.EMPTY: "·",
+## 类型图标 emoji（用于通过 AssetRegistry 查找图标图片）
+const TYPE_ICON_EMOJI: Dictionary = {
+	FogMap.CellType.EMPTY: "",
 	FogMap.CellType.SEARCH_EVENT: "🔍",
 	FogMap.CellType.FIGHT_EVENT: "⚠️",
 	FogMap.CellType.TREASURE: "💎",
 	FogMap.CellType.PLAYTEST: "🔬",
 	FogMap.CellType.POLISH: "✨",
 	FogMap.CellType.EXIT: "🚀",
+	FogMap.CellType.WALL: "",
+}
+
+## 文字 fallback（无图时显示）
+const TYPE_ICONS_FALLBACK: Dictionary = {
+	FogMap.CellType.EMPTY: "·",
+	FogMap.CellType.SEARCH_EVENT: "?!",
+	FogMap.CellType.FIGHT_EVENT: "!!",
+	FogMap.CellType.TREASURE: "<>",
+	FogMap.CellType.PLAYTEST: ">>",
+	FogMap.CellType.POLISH: "**",
+	FogMap.CellType.EXIT: "=>",
 	FogMap.CellType.WALL: "█",
 }
+
+## 起点图标
+const START_EMOJI: String = "🏆"
 
 ## 稀有度标记符号（迷雾状态显示在 ? 旁边）
 const RARITY_MARKS: Dictionary = {
@@ -80,6 +110,21 @@ const RING_SEGMENTS: int = 64            ## 圆弧段数
 
 func _ready() -> void:
 	pressed.connect(_on_pressed)
+
+	# 创建图标 TextureRect（居中，揭开后显示图片图标）
+	_icon_rect = TextureRect.new()
+	_icon_rect.name = "IconRect"
+	_icon_rect.set_anchors_and_offsets_preset(PRESET_CENTER)
+	_icon_rect.custom_minimum_size = Vector2(24, 24)
+	_icon_rect.size = Vector2(24, 24)
+	# 居中：手动偏移到格子中心
+	_icon_rect.position = Vector2(-12, -12)  # 会在 update_visual 中重算
+	_icon_rect.expand_mode = TextureRect.EXPAND_FIT_WIDTH_PROPORTIONAL
+	_icon_rect.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+	_icon_rect.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_icon_rect.visible = false
+	add_child(_icon_rect)
+
 	# 创建绘制层——在所有子节点之上，用于绘制进度环
 	_draw_layer = Control.new()
 	_draw_layer.name = "DrawLayer"
@@ -125,8 +170,11 @@ func update_visual() -> void:
 
 
 func _show_hidden() -> void:
+	_stop_wobble()
 	bg_rect.color = COLOR_HIDDEN
 	icon_label.text = ""
+	icon_label.visible = true
+	_icon_rect.visible = false
 	glow_rect.color = Color(0, 0, 0, 0)
 	disabled = true
 	mouse_default_cursor_shape = Control.CURSOR_ARROW
@@ -134,11 +182,18 @@ func _show_hidden() -> void:
 
 func _show_foggy() -> void:
 	bg_rect.color = COLOR_FOGGY
-	# 显示 ? + 稀有度标记
-	var mark: String = RARITY_MARKS.get(rarity, "") as String
-	if mark != "":
-		icon_label.text = "?%s" % mark
+	# 尝试用图标图片显示问号
+	var tex: Texture2D = _get_icon_texture("❓")
+	if tex != null and DisplayServer.get_name() != "headless":
+		_icon_rect.texture = tex
+		var cell_size: Vector2 = size
+		_icon_rect.position = (cell_size - Vector2(24, 24)) / 2.0
+		_icon_rect.visible = true
+		icon_label.visible = false
 	else:
+		_icon_rect.visible = false
+		icon_label.visible = true
+		icon_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 		icon_label.text = "?"
 	# 光晕颜色改为稀有度颜色（而非类型颜色）
 	var rarity_color: Color = _get_rarity_glow_color()
@@ -146,23 +201,69 @@ func _show_foggy() -> void:
 	disabled = false
 	mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
 
+	# 启动问号晃动动画
+	_start_wobble()
+
 
 func _show_revealed() -> void:
+	_stop_wobble()
 	if is_start:
 		bg_rect.color = COLOR_START
-		icon_label.text = "★"
+		_show_icon_texture(START_EMOJI, "★")
 	else:
 		bg_rect.color = _get_type_color()
-		icon_label.text = TYPE_ICONS.get(cell_type, "") as String
+		var emoji: String = TYPE_ICON_EMOJI.get(cell_type, "") as String
+		var fallback: String = TYPE_ICONS_FALLBACK.get(cell_type, "") as String
+		_show_icon_texture(emoji, fallback)
 	glow_rect.color = Color(0, 0, 0, 0)
 	disabled = true
 	mouse_default_cursor_shape = Control.CURSOR_ARROW
+
+
+## 尝试显示图标图片，失败则显示文字 fallback
+func _show_icon_texture(emoji: String, fallback_text: String) -> void:
+	if emoji == "" or DisplayServer.get_name() == "headless":
+		icon_label.text = fallback_text
+		icon_label.visible = true
+		_icon_rect.visible = false
+		return
+
+	var tex: Texture2D = _get_icon_texture(emoji)
+	if tex != null:
+		_icon_rect.texture = tex
+		# 居中定位
+		var cell_size: Vector2 = size
+		_icon_rect.position = (cell_size - Vector2(24, 24)) / 2.0
+		_icon_rect.visible = true
+		icon_label.visible = false
+	else:
+		icon_label.text = fallback_text
+		icon_label.visible = true
+		_icon_rect.visible = false
+
+
+## 从缓存获取图标纹理
+func _get_icon_texture(emoji: String) -> Texture2D:
+	if _icon_tex_cache.has(emoji):
+		return _icon_tex_cache[emoji] as Texture2D
+
+	var icon_name: String = AssetRegistry.EMOJI_ICON_MAP.get(emoji, "") as String
+	if icon_name.is_empty():
+		return null
+	var path: String = AssetRegistry.ICON_DIR + icon_name + ".png"
+	if not ResourceLoader.exists(path):
+		return null
+	var tex: Texture2D = load(path) as Texture2D
+	if tex:
+		_icon_tex_cache[emoji] = tex
+	return tex
 
 
 ## ===== Loading 动画 =====
 
 ## 开始 loading 动画
 func start_loading() -> void:
+	_stop_wobble()
 	var rarity_name: String = FogMap.RARITY_NAMES[rarity]
 	_loading_duration = Config.RARITY_LOADING_DURATION.get(rarity_name, 0.5) as float
 	var level_data: Dictionary = Config.RARITY_LEVELS.get(rarity_name, {})
@@ -172,13 +273,47 @@ func start_loading() -> void:
 	_loading_months_consumed = 0
 	_is_loading = true
 
-	# 隐藏 ? 图标，显示空
-	icon_label.text = ""
-
 	# 禁用自身
 	disabled = true
 
-	# 用 Tween 驱动进度
+	# 问号消散动画（C）：放大 + 旋转 + 淡出，0.3s
+	var dissolve_duration: float = 0.3
+	var dissolve_target: Control = _icon_rect if _icon_rect.visible else icon_label as Control
+
+	# 设置旋转锚点为中心
+	if dissolve_target == _icon_rect:
+		_icon_rect.pivot_offset = Vector2(12, 12)
+	else:
+		icon_label.pivot_offset = icon_label.size / 2.0
+
+	var dissolve_tween: Tween = create_tween().set_parallel(true)
+	dissolve_tween.tween_property(dissolve_target, "scale", Vector2(2.0, 2.0), dissolve_duration) \
+		.set_ease(Tween.EASE_OUT).set_trans(Tween.TRANS_QUAD)
+	dissolve_tween.tween_property(dissolve_target, "rotation_degrees", 45.0, dissolve_duration) \
+		.set_ease(Tween.EASE_OUT).set_trans(Tween.TRANS_QUAD)
+	dissolve_tween.tween_property(dissolve_target, "modulate:a", 0.0, dissolve_duration) \
+		.set_ease(Tween.EASE_IN)
+
+	# 消散完成后：隐藏图标，重置属性，启动进度环 + 呼吸脉冲
+	dissolve_tween.chain().tween_callback(_on_dissolve_finished.bind(dissolve_target))
+
+
+## 消散动画完成，启动进度环和呼吸脉冲
+func _on_dissolve_finished(target: Control) -> void:
+	# 重置消散目标的变换属性
+	target.scale = Vector2.ONE
+	target.rotation_degrees = 0.0
+	target.modulate.a = 1.0
+
+	# 隐藏问号
+	icon_label.text = ""
+	icon_label.visible = false
+	_icon_rect.visible = false
+
+	# 启动呼吸脉冲（A）
+	_start_breath_pulse()
+
+	# 启动进度环
 	var tween: Tween = create_tween()
 	tween.tween_method(_set_loading_progress, 0.0, 1.0, _loading_duration)
 	tween.tween_callback(_on_loading_complete)
@@ -214,6 +349,7 @@ func _set_loading_progress(value: float) -> void:
 func _on_loading_complete() -> void:
 	_is_loading = false
 	_loading_progress = 0.0
+	_stop_breath_pulse()
 	if _draw_layer:
 		_draw_layer.queue_redraw()
 	cell_loading_finished.emit(row, col)
@@ -295,3 +431,67 @@ func _get_type_color() -> Color:
 
 func _on_pressed() -> void:
 	cell_clicked.emit(row, col)
+
+
+## ===== 迷雾问号晃动动画 =====
+const WOBBLE_ANGLE: float = 12.0     ## 最大旋转角度（度）
+const WOBBLE_DURATION: float = 0.6   ## 单次摆动时长（秒）
+const WOBBLE_PAUSE: float = 1.2      ## 两次摆动之间的停顿（秒）
+
+func _start_wobble() -> void:
+	if DisplayServer.get_name() == "headless":
+		return
+	_stop_wobble()
+	if not is_instance_valid(_icon_rect) or not _icon_rect.visible:
+		return
+	# 设置旋转锚点为图标中心
+	_icon_rect.pivot_offset = Vector2(12, 12)
+	_wobble_tween = create_tween().set_loops()
+	# 左摆
+	_wobble_tween.tween_property(_icon_rect, "rotation_degrees", -WOBBLE_ANGLE, WOBBLE_DURATION * 0.5) \
+		.set_ease(Tween.EASE_IN_OUT).set_trans(Tween.TRANS_SINE).from(0.0)
+	# 右摆
+	_wobble_tween.tween_property(_icon_rect, "rotation_degrees", WOBBLE_ANGLE, WOBBLE_DURATION) \
+		.set_ease(Tween.EASE_IN_OUT).set_trans(Tween.TRANS_SINE)
+	# 回正
+	_wobble_tween.tween_property(_icon_rect, "rotation_degrees", 0.0, WOBBLE_DURATION * 0.5) \
+		.set_ease(Tween.EASE_IN_OUT).set_trans(Tween.TRANS_SINE)
+	# 停顿
+	_wobble_tween.tween_interval(WOBBLE_PAUSE)
+
+
+func _stop_wobble() -> void:
+	if _wobble_tween != null and _wobble_tween.is_valid():
+		_wobble_tween.kill()
+		_wobble_tween = null
+	if is_instance_valid(_icon_rect):
+		_icon_rect.rotation_degrees = 0.0
+
+
+## ===== 呼吸脉冲动画（loading 中背景明暗闪烁）=====
+const BREATH_BRIGHT: float = 0.35     ## 亮峰：背景色增亮幅度
+const BREATH_CYCLE: float = 0.5       ## 单次呼吸周期（秒）
+
+func _start_breath_pulse() -> void:
+	if DisplayServer.get_name() == "headless":
+		return
+	_stop_breath_pulse()
+	_breath_base_color = bg_rect.color
+	var bright_color: Color = _breath_base_color.lightened(BREATH_BRIGHT)
+	# 叠加一点稀有度颜色
+	var rarity_tint: Color = _loading_color
+	bright_color = bright_color.lerp(rarity_tint, 0.3)
+
+	_breath_tween = create_tween().set_loops()
+	# 亮起
+	_breath_tween.tween_property(bg_rect, "color", bright_color, BREATH_CYCLE * 0.5) \
+		.set_ease(Tween.EASE_IN_OUT).set_trans(Tween.TRANS_SINE)
+	# 暗回
+	_breath_tween.tween_property(bg_rect, "color", _breath_base_color, BREATH_CYCLE * 0.5) \
+		.set_ease(Tween.EASE_IN_OUT).set_trans(Tween.TRANS_SINE)
+
+
+func _stop_breath_pulse() -> void:
+	if _breath_tween != null and _breath_tween.is_valid():
+		_breath_tween.kill()
+		_breath_tween = null

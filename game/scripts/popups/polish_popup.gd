@@ -72,7 +72,7 @@ func setup(
 
 	if remaining_months <= month_cost:
 		cost_label.add_theme_color_override("font_color", Color.RED)
-		cost_label.text += "  ⚠ 时间紧张！"
+		cost_label.text += "  [!] 时间紧张！"
 
 
 ## 打磨失败时，切换到bug二次选择面板
@@ -83,7 +83,7 @@ func show_bug_choice(fix_months: int, penalty: float, remaining_months: int) -> 
 	var will_expire: bool = remaining_months < fix_months
 	var expire_warning: String = ""
 	if will_expire:
-		expire_warning = "\n\n[color=red]⚠ 警告：当前剩余时间不足以完成修复，选择修复将导致时间耗尽！[/color]"
+		expire_warning = "\n\n[color=red][!] 警告：当前剩余时间不足以完成修复，选择修复将导致时间耗尽！[/color]"
 
 	bug_desc.text = (
 		"打磨过程中发现 [color=red][b]严重Bug[/b][/color]！\n\n"

@@ -175,19 +175,19 @@ const RARITY_TYPE_WEIGHTS: Dictionary = {
 }
 
 ## ===== Bug Survivor 小游戏 =====
-const BUG_SURVIVOR_GAME_DURATION: float = 60.0      ## 总时长（秒）
+const BUG_SURVIVOR_GAME_DURATION: float = 30.0      ## 总时长（秒）
 const BUG_SURVIVOR_ARENA_SIZE: Vector2 = Vector2(800, 600)  ## 竞技场尺寸
-const BUG_SURVIVOR_PLAYER_SPEED: float = 200.0      ## 玩家移速（像素/秒）
+const BUG_SURVIVOR_PLAYER_SPEED: float = 230.0      ## 玩家移速（像素/秒）
 const BUG_SURVIVOR_PLAYER_RADIUS: float = 32.0      ## 玩家碰撞半径（2×）
 const BUG_SURVIVOR_BULLET_SPEED: float = 400.0      ## 子弹速度（像素/秒）
-const BUG_SURVIVOR_BULLET_INTERVAL: float = 0.35    ## 射击间隔（秒，略慢，火力密度降低）
+const BUG_SURVIVOR_BULLET_INTERVAL: float = 0.30    ## 射击间隔（秒）
 const BUG_SURVIVOR_BULLET_RADIUS: float = 8.0       ## 子弹碰撞半径
 const BUG_SURVIVOR_BUG_RADIUS: float = 24.0         ## 虫子碰撞半径（2×）
 
-## 难度曲线：站着不动30秒内必死
+## 难度曲线：站着不动约25秒死，主动操作可通关
 const BUG_SURVIVOR_SPAWN_CURVE: Array = [
-	{"time_start": 0.0, "spawn_interval": 0.75, "speed_multiplier": 1.3},
-	{"time_start": 9.0, "spawn_interval": 0.42, "speed_multiplier": 1.8},
-	{"time_start": 20.0, "spawn_interval": 0.26, "speed_multiplier": 2.2},
-	{"time_start": 35.0, "spawn_interval": 0.18, "speed_multiplier": 2.6},
+	{"time_start": 0.0, "spawn_interval": 0.9, "speed_multiplier": 1.2},
+	{"time_start": 7.0, "spawn_interval": 0.55, "speed_multiplier": 1.6},
+	{"time_start": 15.0, "spawn_interval": 0.35, "speed_multiplier": 2.0},
+	{"time_start": 22.0, "spawn_interval": 0.25, "speed_multiplier": 2.4},
 ]

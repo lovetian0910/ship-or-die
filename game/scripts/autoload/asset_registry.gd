@@ -60,6 +60,47 @@ var ui_icons: Dictionary = {
 	"launch": "res://assets/sprites/ui/icon_launch.png",       # 上线（48×48）
 }
 
+## ===== Emoji 图标（24×24，替代 emoji 字符）=====
+const ICON_DIR: String = "res://assets/sprites/icons/"
+
+## emoji → 图标文件名（不含路径和后缀）
+const EMOJI_ICON_MAP: Dictionary = {
+	"💰": "icon_money",
+	"⚠️": "icon_warning",
+	"⚠": "icon_warning",
+	"⚡": "icon_warning",
+	"✅": "icon_success",
+	"🏆": "icon_success",
+	"💔": "icon_fail",
+	"💥": "icon_fail",
+	"❌": "icon_fail",
+	"🔍": "icon_search",
+	"🔬": "icon_search",
+	"💎": "icon_treasure",
+	"🚀": "icon_launch",
+	"✨": "icon_polish",
+	"🔧": "icon_polish",
+	"⏰": "icon_time",
+	"⏳": "icon_time",
+	"⏱️": "icon_time",
+	"⏭️": "icon_time",
+	"📋": "icon_info",
+	"💡": "icon_info",
+	"📊": "icon_info",
+	"📢": "icon_info",
+	"🗺️": "icon_info",
+	"🔙": "icon_info",
+	"🔄": "icon_info",
+	"🏗️": "icon_info",
+	"🎮": "icon_gamepad",
+	"🐛": "icon_gamepad",
+	"🧑‍💻": "icon_team",
+	"🏭": "icon_team",
+	"🤝": "icon_team",
+	"📦": "icon_team",
+	"❓": "icon_mystery",
+}
+
 ## ===== 小游戏素材 =====
 var minigame_assets: Dictionary = {
 	"bg": "res://assets/sprites/minigame/minigame_bg.png",                 # 背景（1280×720）
@@ -156,3 +197,18 @@ func create_display(category: String, key: String, display_size: Vector2 = Vecto
 		container.add_child(label)
 
 		return container
+
+
+## 将 emoji 转换为 BBCode 内嵌图标。有图标时返回 [img] 标签，无图标时返回原字符串。
+## 用于 RichTextLabel（bbcode_enabled = true）的文本中。
+func emoji_bbcode(emoji: String, icon_size: int = 20) -> String:
+	var icon_name: String = EMOJI_ICON_MAP.get(emoji, "") as String
+	if icon_name.is_empty():
+		return emoji
+	var path: String = ICON_DIR + icon_name + ".png"
+	# headless 模式下跳过图片（避免报错），直接返回 fallback 文字
+	if DisplayServer.get_name() == "headless":
+		return emoji
+	if not ResourceLoader.exists(path):
+		return emoji
+	return "[img=%dx%d]%s[/img]" % [icon_size, icon_size, path]

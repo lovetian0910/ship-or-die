@@ -70,7 +70,7 @@ const RESOURCE_NAMES: Dictionary = {
 	},
 }
 
-## 资源图标
+## 资源图标 emoji（用于 emoji_bbcode 转换为内嵌图标）
 const RESOURCE_ICONS: Dictionary = {
 	"creator": "🧑‍💻",
 	"outsource": "🏭",
@@ -84,9 +84,12 @@ const RESOURCE_ICONS: Dictionary = {
 @onready var content_list: VBoxContainer = %ContentList
 @onready var separator: HSeparator = %Separator
 @onready var total_label: Label = %TotalLabel
-@onready var money_label: Label = %MoneyLabel
+@onready var _money_label_placeholder: Label = %MoneyLabel
 @onready var retry_btn: Button = %RetryBtn
 @onready var menu_btn: Button = %MenuBtn
+
+## 运行时替换为 RichTextLabel（支持内嵌图标）
+var money_label: RichTextLabel
 
 var _rolling_value: int = 0
 
@@ -94,6 +97,20 @@ var _rolling_value: int = 0
 func _ready() -> void:
 	retry_btn.pressed.connect(_on_retry)
 	menu_btn.pressed.connect(_on_menu)
+
+	# 将 MoneyLabel 替换为 RichTextLabel（支持 BBCode 内嵌图标）
+	money_label = RichTextLabel.new()
+	money_label.bbcode_enabled = true
+	money_label.fit_content = true
+	money_label.scroll_active = false
+	money_label.add_theme_font_size_override("normal_font_size", 18)
+	money_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	var parent: Node = _money_label_placeholder.get_parent()
+	var idx: int = _money_label_placeholder.get_index()
+	parent.add_child(money_label)
+	parent.move_child(money_label, idx)
+	_money_label_placeholder.queue_free()
+
 	_hide_all()
 
 	# 判断成功/失败
@@ -160,7 +177,7 @@ func _setup_success() -> void:
 
 	# 预填文字
 	total_label.text = "本局总收入：¥0"
-	money_label.text = "💰 当前金钱：¥%d" % current_money
+	money_label.text = "%s 当前金钱：¥%d" % [AssetRegistry.emoji_bbcode("💰"), current_money]
 
 	# ---- Tween 动画编排 ----
 	var tween: Tween = create_tween()
@@ -235,7 +252,7 @@ func _setup_failure() -> void:
 		"总计损失：¥%d——这些钱本来可以买%d杯奶茶。" % [total_loss, total_loss / 30],
 	]
 	total_label.text = "总计损失：¥0"
-	money_label.text = "剩余金钱：¥%d" % current_money
+	money_label.text = "%s 剩余金钱：¥%d" % [AssetRegistry.emoji_bbcode("💰"), current_money]
 
 	# ---- Tween 动画编排 ----
 	var tween: Tween = create_tween()
@@ -377,9 +394,32 @@ func _create_failure_item(res: Dictionary) -> HBoxContainer:
 	var hbox := HBoxContainer.new()
 	hbox.add_theme_constant_override("separation", 12)
 
-	var icon_label := Label.new()
-	icon_label.text = str(res.get("icon", "📦"))
-	hbox.add_child(icon_label)
+	# 图标：用 TextureRect 显示图标图片
+	var icon_emoji: String = str(res.get("icon", "📦"))
+	var icon_name: String = AssetRegistry.EMOJI_ICON_MAP.get(icon_emoji, "") as String
+	if icon_name != "":
+		var icon_path: String = AssetRegistry.ICON_DIR + icon_name + ".png"
+		if ResourceLoader.exists(icon_path) and DisplayServer.get_name() != "headless":
+			var tex: Texture2D = load(icon_path) as Texture2D
+			if tex:
+				var icon_rect := TextureRect.new()
+				icon_rect.texture = tex
+				icon_rect.custom_minimum_size = Vector2(20, 20)
+				icon_rect.expand_mode = TextureRect.EXPAND_FIT_WIDTH_PROPORTIONAL
+				icon_rect.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+				hbox.add_child(icon_rect)
+			else:
+				var icon_label := Label.new()
+				icon_label.text = icon_emoji
+				hbox.add_child(icon_label)
+		else:
+			var icon_label := Label.new()
+			icon_label.text = icon_emoji
+			hbox.add_child(icon_label)
+	else:
+		var icon_label := Label.new()
+		icon_label.text = icon_emoji
+		hbox.add_child(icon_label)
 
 	var name_label := Label.new()
 	name_label.text = str(res.get("name", "未知"))
@@ -394,7 +434,7 @@ func _create_failure_item(res: Dictionary) -> HBoxContainer:
 	var copy_label := Label.new()
 	copy_label.text = str(res.get("loss_copy", ""))
 	copy_label.add_theme_color_override("font_color", Color(0.6, 0.6, 0.6))
-	copy_label.add_theme_font_size_override("font_size", 13)
+	copy_label.add_theme_font_size_override("font_size", 15)
 	copy_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	copy_label.custom_minimum_size.x = 240
 	hbox.add_child(copy_label)
@@ -487,17 +527,23 @@ func _create_share_battle_section(result: Dictionary) -> VBoxContainer:
 	section.add_theme_constant_override("separation", 4)
 
 	# 标题
-	var title := Label.new()
-	title.text = "📊 市场争夺战"
-	title.add_theme_font_size_override("font_size", 15)
-	title.add_theme_color_override("font_color", Color(0.9, 0.8, 0.3))
+	var title := RichTextLabel.new()
+	title.bbcode_enabled = true
+	title.fit_content = true
+	title.scroll_active = false
+	title.text = "%s 市场争夺战" % AssetRegistry.emoji_bbcode("📊")
+	title.add_theme_font_size_override("normal_font_size", 15)
+	title.add_theme_color_override("default_color", Color(0.9, 0.8, 0.3))
 	section.add_child(title)
 
 	# 玩家品质
-	var player_line := Label.new()
-	player_line.text = "🎮 你的品质：%d 分" % int(player_quality)
-	player_line.add_theme_font_size_override("font_size", 13)
-	player_line.add_theme_color_override("font_color", Color(0.4, 0.9, 0.4))
+	var player_line := RichTextLabel.new()
+	player_line.bbcode_enabled = true
+	player_line.fit_content = true
+	player_line.scroll_active = false
+	player_line.text = "%s 你的品质：%d 分" % [AssetRegistry.emoji_bbcode("🎮"), int(player_quality)]
+	player_line.add_theme_font_size_override("normal_font_size", 15)
+	player_line.add_theme_color_override("default_color", Color(0.4, 0.9, 0.4))
 	section.add_child(player_line)
 
 	# 竞品对比
@@ -524,7 +570,7 @@ func _create_share_battle_section(result: Dictionary) -> VBoxContainer:
 
 		var comp_line := Label.new()
 		comp_line.text = "vs %s：%d 分  %s" % [comp_name, int(comp_q), compare_text]
-		comp_line.add_theme_font_size_override("font_size", 13)
+		comp_line.add_theme_font_size_override("font_size", 15)
 		comp_line.add_theme_color_override("font_color", Color(0.85, 0.5, 0.5))
 		comp_line.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 		section.add_child(comp_line)
@@ -543,7 +589,7 @@ func _create_share_battle_section(result: Dictionary) -> VBoxContainer:
 			short_name = "竞品%d" % (i + 1)
 		share_text += " | %s %d%%" % [short_name, comp_pct]
 	share_line.text = share_text
-	share_line.add_theme_font_size_override("font_size", 13)
+	share_line.add_theme_font_size_override("font_size", 15)
 	share_line.add_theme_color_override("font_color", Color(0.8, 0.8, 0.9))
 	share_line.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	section.add_child(share_line)
@@ -551,10 +597,13 @@ func _create_share_battle_section(result: Dictionary) -> VBoxContainer:
 	# 空窗期提示
 	if window_ratio > 0.01:
 		var window_months: int = int(window_ratio * float(Config.TIME_TOTAL_MONTHS))
-		var window_hint := Label.new()
-		window_hint.text = "⏱️ 你独占了约 %d 个月的市场空窗期" % window_months
-		window_hint.add_theme_font_size_override("font_size", 12)
-		window_hint.add_theme_color_override("font_color", Color(0.5, 0.8, 0.9))
+		var window_hint := RichTextLabel.new()
+		window_hint.bbcode_enabled = true
+		window_hint.fit_content = true
+		window_hint.scroll_active = false
+		window_hint.text = "%s 你独占了约 %d 个月的市场空窗期" % [AssetRegistry.emoji_bbcode("⏱️"), window_months]
+		window_hint.add_theme_font_size_override("normal_font_size", 14)
+		window_hint.add_theme_color_override("default_color", Color(0.5, 0.8, 0.9))
 		section.add_child(window_hint)
 
 	# 分隔线

@@ -28,7 +28,7 @@ func _ready() -> void:
 ## ===== 外部调用：设置事件数据 =====
 func setup(event_data: EventData) -> void:
 	_event = event_data
-	_title_label.text = "⚠ " + event_data.title
+	_title_label.text = "[!] " + event_data.title
 	_desc_label.text = event_data.description
 
 	# 加载事件配图
@@ -166,7 +166,7 @@ func _build_ui() -> void:
 
 	# 标题
 	_title_label = Label.new()
-	_title_label.text = "⚠ 危机事件"
+	_title_label.text = "[!] 危机事件"
 	_title_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	_title_label.add_theme_font_size_override("font_size", 24)
 	_title_label.add_theme_color_override("font_color", Color("#e94560"))

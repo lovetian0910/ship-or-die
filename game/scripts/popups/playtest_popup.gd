@@ -29,4 +29,4 @@ func setup(month_cost: int, current_grade_name: String, remaining_months: int) -
 	# 时间不够则警告
 	if remaining_months <= month_cost:
 		cost_label.add_theme_color_override("font_color", Color.RED)
-		cost_label.text += "  ⚠ 时间紧张！"
+		cost_label.text += "  [!] 时间紧张！"

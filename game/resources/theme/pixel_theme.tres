@@ -1,7 +1,8 @@
-[gd_resource type="Theme" load_steps=15 format=3]
+[gd_resource type="Theme" load_steps=16 format=3]
 
 [ext_resource type="FontFile" path="res://assets/fonts/NotoSansSC-Regular.ttf" id="cjk_font"]
 [ext_resource type="FontFile" path="res://assets/fonts/NotoEmoji-Regular.ttf" id="emoji_font"]
+[ext_resource type="FontVariation" path="res://resources/theme/bold_font.tres" id="bold_font"]
 [ext_resource type="StyleBox" path="res://resources/theme/styles/panel_style.tres" id="panel_style"]
 [ext_resource type="StyleBox" path="res://resources/theme/styles/panel_container_style.tres" id="panel_container_style"]
 [ext_resource type="StyleBox" path="res://resources/theme/styles/btn_normal.tres" id="btn_normal"]
@@ -16,8 +17,8 @@
 [ext_resource type="StyleBox" path="res://resources/theme/styles/line_edit_focus.tres" id="line_edit_focus"]
 
 [resource]
-default_font = ExtResource("cjk_font")
-default_font_size = 16
+default_font = ExtResource("bold_font")
+default_font_size = 18
 
 Button/colors/font_color = Color(0.91, 0.91, 0.91, 1)
 Button/colors/font_disabled_color = Color(0.4, 0.4, 0.45, 1)
@@ -25,7 +26,7 @@ Button/colors/font_focus_color = Color(0.91, 0.91, 0.91, 1)
 Button/colors/font_hover_color = Color(0.961, 0.784, 0.259, 1)
 Button/colors/font_hover_pressed_color = Color(0.961, 0.784, 0.259, 1)
 Button/colors/font_pressed_color = Color(0.961, 0.784, 0.259, 1)
-Button/font_sizes/font_size = 16
+Button/font_sizes/font_size = 18
 Button/styles/disabled = ExtResource("btn_disabled")
 Button/styles/focus = ExtResource("btn_focus")
 Button/styles/hover = ExtResource("btn_hover")
@@ -37,7 +38,7 @@ Label/colors/font_color = Color(0.91, 0.91, 0.91, 1)
 Label/colors/font_shadow_color = Color(0, 0, 0, 0.502)
 Label/constants/shadow_offset_x = 2
 Label/constants/shadow_offset_y = 2
-Label/font_sizes/font_size = 16
+Label/font_sizes/font_size = 18
 
 Panel/styles/panel = ExtResource("panel_style")
 
@@ -46,7 +47,7 @@ PanelContainer/styles/panel = ExtResource("panel_container_style")
 PopupPanel/styles/panel = ExtResource("popup_panel_style")
 
 ProgressBar/colors/font_color = Color(0.91, 0.91, 0.91, 1)
-ProgressBar/font_sizes/font_size = 12
+ProgressBar/font_sizes/font_size = 14
 ProgressBar/styles/background = ExtResource("progress_bg")
 ProgressBar/styles/fill = ExtResource("progress_fill")
 
@@ -57,7 +58,7 @@ LineEdit/colors/caret_color = Color(0.961, 0.784, 0.259, 1)
 LineEdit/colors/font_color = Color(0.91, 0.91, 0.91, 1)
 LineEdit/colors/font_placeholder_color = Color(0.627, 0.627, 0.69, 1)
 LineEdit/colors/selection_color = Color(0.059, 0.204, 0.376, 1)
-LineEdit/font_sizes/font_size = 16
+LineEdit/font_sizes/font_size = 18
 LineEdit/styles/focus = ExtResource("line_edit_focus")
 LineEdit/styles/normal = ExtResource("line_edit_normal")
 LineEdit/styles/read_only = ExtResource("line_edit_normal")
@@ -68,12 +69,12 @@ ItemList/colors/font_selected_color = Color(0.961, 0.784, 0.259, 1)
 ItemList/colors/guide_color = Color(0.086, 0.129, 0.243, 0.5)
 
 RichTextLabel/colors/default_color = Color(0.91, 0.91, 0.91, 1)
-RichTextLabel/font_sizes/normal_font_size = 16
-RichTextLabel/font_sizes/bold_font_size = 16
+RichTextLabel/font_sizes/normal_font_size = 18
+RichTextLabel/font_sizes/bold_font_size = 18
 
 TabContainer/colors/font_selected_color = Color(0.961, 0.784, 0.259, 1)
 TabContainer/colors/font_unselected_color = Color(0.627, 0.627, 0.69, 1)
 
 TooltipLabel/colors/font_color = Color(0.91, 0.91, 0.91, 1)
-TooltipLabel/font_sizes/font_size = 12
+TooltipLabel/font_sizes/font_size = 14
 TooltipPanel/styles/panel = ExtResource("panel_container_style")

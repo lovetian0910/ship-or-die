@@ -98,10 +98,10 @@ func _ready() -> void:
 
 	# 开场日志
 	if existing_quality <= 0.0:
-		_add_log("📋 研发启动！前方迷雾重重，点击相邻格子探索")
-		_add_log("💡 格子稀有度越高，消耗时间越长，但奖励也越好！")
+		_add_log("%s 研发启动！前方迷雾重重，点击相邻格子探索" % AssetRegistry.emoji_bbcode("📋"))
+		_add_log("%s 格子稀有度越高，消耗时间越长，但奖励也越好！" % AssetRegistry.emoji_bbcode("💡"))
 	else:
-		_add_log("🔙 返回研发——继续探索")
+		_add_log("%s 返回研发——继续探索" % AssetRegistry.emoji_bbcode("🔙"))
 
 	# 初始化竞争态势栏
 	_refresh_competitor_panel()
@@ -158,7 +158,7 @@ func _on_cell_clicked(row: int, col: int) -> void:
 	var rarity_label: String = Config.RARITY_LEVELS.get(rarity_name, {}).get("label", "普通") as String
 	var verbs: Array[String] = ["埋头开发中", "疯狂写码中", "需求评审中", "联调测试中", "技术攻关中"]
 	var verb: String = verbs[randi_range(0, verbs.size() - 1)]
-	_add_log("⏳ [%s] %s..." % [rarity_label, verb])
+	_add_log("%s [%s] %s..." % [AssetRegistry.emoji_bbcode("⏳"), rarity_label, verb])
 
 	cell_node.start_loading()
 
@@ -199,7 +199,7 @@ func _on_cell_loading_finished(row: int, col: int) -> void:
 		if cell_type == FogMap.CellType.EMPTY or cell_type == FogMap.CellType.SEARCH_EVENT:
 			cell_type = FogMap.CellType.FIGHT_EVENT
 			fog_map.set_cell(row, col, FogMap.CellType.FIGHT_EVENT)
-			_add_log("💥 [color=orange]局势突变——危机降临！[/color]")
+			_add_log("%s [color=orange]局势突变——危机降临！[/color]" % AssetRegistry.emoji_bbcode("💥"))
 
 	# 月数已在 loading 过程中逐月消耗，此处不再 consume_months
 
@@ -208,7 +208,7 @@ func _on_cell_loading_finished(row: int, col: int) -> void:
 
 	# 时间耗尽检查
 	if not TimeManager.is_active:
-		_add_log("[color=red]⏰ 时间耗尽！研发被迫终止[/color]")
+		_add_log("[color=red]%s 时间耗尽！研发被迫终止[/color]" % AssetRegistry.emoji_bbcode("⏰"))
 		_disable_all_cells()
 		_update_ui()
 		return
@@ -253,7 +253,7 @@ func _handle_empty_cell() -> void:
 	var bonus: float = randf_range(Config.MAP_EMPTY_QUALITY_MIN, Config.MAP_EMPTY_QUALITY_MAX)
 	quality_system.apply_boost(bonus)
 	_sync_quality_to_run_data()
-	_add_log("🏗️ 又是平淡的一个月（品质+%.1f）" % bonus)
+	_add_log("%s 又是平淡的一个月（品质+%.1f）" % [AssetRegistry.emoji_bbcode("🏗️"), bonus])
 
 
 func _handle_search_event() -> void:
@@ -271,7 +271,7 @@ func _handle_search_event() -> void:
 			var bonus: float = randf_range(1.0, 2.0)
 			quality_system.apply_boost(bonus)
 			_sync_quality_to_run_data()
-			_add_log("🔍 探索了一番，发现了一些有用的东西（品质+%.1f）" % bonus)
+			_add_log("%s 探索了一番，发现了一些有用的东西（品质+%.1f）" % [AssetRegistry.emoji_bbcode("🔍"), bonus])
 
 
 func _handle_fight_event() -> void:
@@ -283,7 +283,7 @@ func _handle_fight_event() -> void:
 	else:
 		quality_system.apply_penalty(2.0)
 		_sync_quality_to_run_data()
-		_add_log("⚠️ 遇到小麻烦，处理完了（品质-2.0）")
+		_add_log("%s 遇到小麻烦，处理完了（品质-2.0）" % AssetRegistry.emoji_bbcode("⚠️"))
 
 
 ## 统一选择打类事件，保证：首次必出 survivor、不连续同类型
@@ -339,20 +339,20 @@ func _handle_treasure() -> void:
 		0:
 			quality_system.apply_boost(Config.MAP_TREASURE_QUALITY)
 			_sync_quality_to_run_data()
-			_add_log("💎 发现宝箱！品质+%.0f" % Config.MAP_TREASURE_QUALITY)
+			_add_log("%s 发现宝箱！品质+%.0f" % [AssetRegistry.emoji_bbcode("💎"), Config.MAP_TREASURE_QUALITY])
 		1:
 			var current_bonus: float = GameManager.run_data.get("speed_bonus", 0.0) as float
 			GameManager.run_data["speed_bonus"] = current_bonus + Config.MAP_TREASURE_SPEED_BONUS
-			_add_log("💎 发现宝箱！研发效率+%.0f%%" % (Config.MAP_TREASURE_SPEED_BONUS * 100))
+			_add_log("%s 发现宝箱！研发效率+%.0f%%" % [AssetRegistry.emoji_bbcode("💎"), Config.MAP_TREASURE_SPEED_BONUS * 100])
 		2:
 			var current_energy: int = GameManager.run_data.get("bonus_energy", 0) as int
 			GameManager.run_data["bonus_energy"] = current_energy + Config.MAP_TREASURE_ENERGY_BONUS
-			_add_log("💎 发现宝箱！精力+%d" % Config.MAP_TREASURE_ENERGY_BONUS)
+			_add_log("%s 发现宝箱！精力+%d" % [AssetRegistry.emoji_bbcode("💎"), Config.MAP_TREASURE_ENERGY_BONUS])
 
 
 func _handle_playtest() -> void:
 	if _playtest_triggered:
-		_add_log("🔬 内测设备还在，但已经用过了")
+		_add_log("%s 内测设备还在，但已经用过了" % AssetRegistry.emoji_bbcode("🔬"))
 		return
 	_playtest_triggered = true
 	_trigger_playtest()
@@ -360,14 +360,14 @@ func _handle_playtest() -> void:
 
 func _handle_polish() -> void:
 	if _polish_triggered:
-		_add_log("✨ 打磨工具还在，但已经用过了")
+		_add_log("%s 打磨工具还在，但已经用过了" % AssetRegistry.emoji_bbcode("✨"))
 		return
 	_polish_triggered = true
 	_trigger_polish()
 
 
 func _handle_exit() -> void:
-	_add_log("🚀 [color=orange]发现上线出口！是否现在上线？[/color]")
+	_add_log("%s [color=orange]发现上线出口！是否现在上线？[/color]" % AssetRegistry.emoji_bbcode("🚀"))
 	_on_launch_pressed()
 
 
@@ -378,7 +378,7 @@ func _trigger_launch_prompt() -> void:
 
 	_next_launch_prompt_at += Config.MAP_LAUNCH_PROMPT_INTERVAL
 
-	_add_log("📋 [color=yellow]阶段评审——是否上线？[/color]")
+	_add_log("%s [color=yellow]阶段评审——是否上线？[/color]" % AssetRegistry.emoji_bbcode("📋"))
 
 	# 构建简易弹窗
 	var overlay := ColorRect.new()
@@ -403,9 +403,9 @@ func _trigger_launch_prompt() -> void:
 	vbox.add_theme_constant_override("separation", 14)
 
 	var title := Label.new()
-	title.text = "📋 阶段评审"
+	title.text = "[i] 阶段评审"
 	title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	title.add_theme_font_size_override("font_size", 22)
+	title.add_theme_font_size_override("font_size", 24)
 	title.add_theme_color_override("font_color", Color("#f0a030"))
 	vbox.add_child(title)
 
@@ -417,7 +417,7 @@ func _trigger_launch_prompt() -> void:
 	var desc := Label.new()
 	desc.text = "已探索 %d 格，当前品质：%s\n剩余 %d 个月\n\n是否现在上线？选择继续将重新探索新区域。" % [_total_cells_revealed, grade_name, remaining]
 	desc.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	desc.add_theme_font_size_override("font_size", 15)
+	desc.add_theme_font_size_override("font_size", 17)
 	desc.add_theme_color_override("font_color", Color(0.85, 0.85, 0.85))
 	vbox.add_child(desc)
 
@@ -479,7 +479,7 @@ func _on_launch_prompt_launch(popup: Control) -> void:
 func _on_launch_prompt_continue(popup: Control) -> void:
 	popup.queue_free()
 	_popup_active = false
-	_add_log("🔄 [color=cyan]决定继续研发——重新探索新区域[/color]")
+	_add_log("%s [color=cyan]决定继续研发——重新探索新区域[/color]" % AssetRegistry.emoji_bbcode("🔄"))
 	_reset_map()
 	_enable_clickable_cells()
 	_update_ui()
@@ -502,7 +502,7 @@ func _reset_map() -> void:
 	# 重建 UI
 	_build_map_grid()
 
-	_add_log("🗺️ 进入新区域，继续探索！")
+	_add_log("%s 进入新区域，继续探索！" % AssetRegistry.emoji_bbcode("🗺️"))
 
 
 ## ===== 辅助：找搜类/打类事件 =====
@@ -567,7 +567,7 @@ func _trigger_search_event(event: EventData) -> void:
 	_popup_active = true
 	_disable_all_cells()
 
-	_add_log("🔍 [color=yellow]探索发现：%s[/color]" % event.title)
+	_add_log("%s [color=yellow]探索发现：%s[/color]" % [AssetRegistry.emoji_bbcode("🔍"), event.title])
 
 	var popup: Control = SearchEventPopupScene.instantiate()
 	popup_layer.add_child(popup)
@@ -586,22 +586,22 @@ func _on_search_resolved(accepted: bool, effects: Dictionary, popup: Control, ev
 			EventData.SearchBenefitType.QUALITY_CAP:
 				quality_system.cap += event.search_benefit_value
 				GameManager.run_data["quality_cap"] = quality_system.cap
-				_add_log("✅ %s — 品质上限+%.0f" % [event.title, event.search_benefit_value])
+				_add_log("%s %s — 品质上限+%.0f" % [AssetRegistry.emoji_bbcode("✅"), event.title, event.search_benefit_value])
 			EventData.SearchBenefitType.DEV_SPEED:
 				var current_bonus: float = GameManager.run_data.get("speed_bonus", 0.0) as float
 				GameManager.run_data["speed_bonus"] = current_bonus + event.search_benefit_value
-				_add_log("✅ %s — 研发效率+%.0f%%" % [event.title, event.search_benefit_value * 100])
+				_add_log("%s %s — 研发效率+%.0f%%" % [AssetRegistry.emoji_bbcode("✅"), event.title, event.search_benefit_value * 100])
 			EventData.SearchBenefitType.QUALITY_FLAT:
 				quality_system.apply_boost(event.search_benefit_value)
-				_add_log("✅ %s — 品质+%.0f" % [event.title, event.search_benefit_value])
+				_add_log("%s %s — 品质+%.0f" % [AssetRegistry.emoji_bbcode("✅"), event.title, event.search_benefit_value])
 			EventData.SearchBenefitType.ENERGY:
 				var current_energy: int = GameManager.run_data.get("bonus_energy", 0) as int
 				GameManager.run_data["bonus_energy"] = current_energy + int(event.search_benefit_value)
-				_add_log("✅ %s — 精力+%d" % [event.title, int(event.search_benefit_value)])
+				_add_log("%s %s — 精力+%d" % [AssetRegistry.emoji_bbcode("✅"), event.title, int(event.search_benefit_value)])
 
 		_sync_quality_to_run_data()
 	else:
-		_add_log("⏭️ 放弃了：%s" % event.title)
+		_add_log("%s 放弃了：%s" % [AssetRegistry.emoji_bbcode("⏭️"), event.title])
 
 	_update_ui()
 
@@ -610,7 +610,7 @@ func _trigger_fight_event(event: EventData) -> void:
 	_popup_active = true
 	_disable_all_cells()
 
-	_add_log("⚠️ [color=red]危机事件：%s[/color]" % event.title)
+	_add_log("%s [color=red]危机事件：%s[/color]" % [AssetRegistry.emoji_bbcode("⚠️"), event.title])
 
 	var popup: Control = FightEventPopupScene.instantiate()
 	popup_layer.add_child(popup)
@@ -636,11 +636,11 @@ func _on_fight_resolved(result: String, effects: Dictionary, popup: Control, eve
 
 	match result:
 		"risky":
-			_add_log("🏆 [color=green]大成功！%s[/color]" % desc)
+			_add_log("%s [color=green]大成功！%s[/color]" % [AssetRegistry.emoji_bbcode("🏆"), desc])
 		"steady":
-			_add_log("✅ %s" % desc)
+			_add_log("%s %s" % [AssetRegistry.emoji_bbcode("✅"), desc])
 		_:
-			_add_log("💔 [color=red]%s[/color]" % desc)
+			_add_log("%s [color=red]%s[/color]" % [AssetRegistry.emoji_bbcode("💔"), desc])
 
 	_update_ui()
 
@@ -685,7 +685,7 @@ func _on_playtest_accepted(popup: Control) -> void:
 	GameManager.run_data["quality_revealed"] = true
 	_sync_quality_to_run_data()
 	EventBus.quality_revealed.emit(quality_system.raw_score, quality_system.get_true_grade_name())
-	_add_log("🔬 内测完成 — 真实品质：[color=cyan]%s[/color]" % quality_system.get_display_grade_name())
+	_add_log("%s 内测完成 — 真实品质：[color=cyan]%s[/color]" % [AssetRegistry.emoji_bbcode("🔬"), quality_system.get_display_grade_name()])
 
 	popup.queue_free()
 	_popup_active = false
@@ -693,12 +693,12 @@ func _on_playtest_accepted(popup: Control) -> void:
 	_update_ui()
 
 	if not still_alive:
-		_add_log("[color=red]⏰ 时间耗尽！[/color]")
+		_add_log("[color=red]%s 时间耗尽！[/color]" % AssetRegistry.emoji_bbcode("⏰"))
 		_disable_all_cells()
 
 
 func _on_playtest_skipped(popup: Control) -> void:
-	_add_log("⏭️ 跳过了内测验证")
+	_add_log("%s 跳过了内测验证" % AssetRegistry.emoji_bbcode("⏭️"))
 	popup.queue_free()
 	_popup_active = false
 	_enable_clickable_cells()
@@ -734,7 +734,7 @@ func _on_polish_accepted(popup: Control) -> void:
 		quality_system.apply_boost(Config.POLISH_QUALITY_BOOST)
 		GameManager.run_data["did_polish"] = true
 		_sync_quality_to_run_data()
-		_add_log("✨ 打磨成功！品质提升至：[color=green]%s[/color]" % quality_system.get_display_grade_name())
+		_add_log("%s 打磨成功！品质提升至：[color=green]%s[/color]" % [AssetRegistry.emoji_bbcode("✨"), quality_system.get_display_grade_name()])
 
 		popup.queue_free()
 		_popup_active = false
@@ -757,7 +757,7 @@ func _on_bug_fix(popup: Control) -> void:
 	var still_alive: bool = TimeManager.consume_months(Config.POLISH_BUG_FIX_MONTHS)
 	GameManager.run_data["did_polish"] = true
 	_sync_quality_to_run_data()
-	_add_log("🔧 紧急修复完成 — 品质未变，但消耗了额外时间")
+	_add_log("%s 紧急修复完成 — 品质未变，但消耗了额外时间" % AssetRegistry.emoji_bbcode("🔧"))
 
 	popup.queue_free()
 	_popup_active = false
@@ -765,7 +765,7 @@ func _on_bug_fix(popup: Control) -> void:
 	_update_ui()
 
 	if not still_alive:
-		_add_log("[color=red]⏰ 时间耗尽！[/color]")
+		_add_log("[color=red]%s 时间耗尽！[/color]" % AssetRegistry.emoji_bbcode("⏰"))
 		_disable_all_cells()
 
 
@@ -773,7 +773,7 @@ func _on_bug_ignore(popup: Control) -> void:
 	quality_system.apply_penalty(Config.POLISH_FAIL_PENALTY)
 	GameManager.run_data["did_polish"] = true
 	_sync_quality_to_run_data()
-	_add_log("💥 放弃修复 — 品质降至：[color=red]%s[/color]" % quality_system.get_display_grade_name())
+	_add_log("%s 放弃修复 — 品质降至：[color=red]%s[/color]" % [AssetRegistry.emoji_bbcode("💥"), quality_system.get_display_grade_name()])
 
 	popup.queue_free()
 	_popup_active = false
@@ -782,7 +782,7 @@ func _on_bug_ignore(popup: Control) -> void:
 
 
 func _on_polish_skipped(popup: Control) -> void:
-	_add_log("⏭️ 跳过了打磨")
+	_add_log("%s 跳过了打磨" % AssetRegistry.emoji_bbcode("⏭️"))
 	popup.queue_free()
 	_popup_active = false
 	_enable_clickable_cells()
@@ -862,7 +862,7 @@ func _add_log(text: String) -> void:
 	label.fit_content = true
 	label.scroll_active = false
 	label.text = "> %s" % text
-	label.add_theme_font_size_override("normal_font_size", 13)
+	label.add_theme_font_size_override("normal_font_size", 15)
 	label.custom_minimum_size.y = 22
 	event_log.add_child(label)
 
@@ -912,16 +912,16 @@ func _refresh_competitor_panel() -> void:
 		item.bbcode_enabled = true
 		item.fit_content = true
 		item.scroll_active = false
-		item.add_theme_font_size_override("normal_font_size", 12)
+		item.add_theme_font_size_override("normal_font_size", 14)
 		item.custom_minimum_size.y = 28
 
 		if comp.launched:
 			var quality_text: String = AICompetitors.get_fuzzy_quality_text(comp.quality)
-			item.text = "[color=red]🔴[/color] %s\n     [color=gray]已上线 | %s[/color]" % [
+			item.text = "[color=red]●[/color] %s\n     [color=gray]已上线 | %s[/color]" % [
 				_get_short_name(comp.competitor_name), quality_text]
 		else:
 			var hint: String = AICompetitors.get_personality_hint(comp.personality)
-			item.text = "[color=yellow]🟡[/color] %s\n     [color=gray]开发中 | %s[/color]" % [
+			item.text = "[color=yellow]●[/color] %s\n     [color=gray]开发中 | %s[/color]" % [
 				_get_short_name(comp.competitor_name), hint]
 
 		competitor_list.add_child(item)
@@ -930,7 +930,7 @@ func _refresh_competitor_panel() -> void:
 	var topic_id: StringName = StringName(str(GameManager.run_data.get("topic", "")))
 	var heat_text: String = MarketHeat.get_fuzzy_text(topic_id)
 	var heat_color: Color = MarketHeat.get_fuzzy_color(topic_id)
-	market_heat_label.text = "📊 市场热度：%s" % heat_text
+	market_heat_label.text = "[i] 市场热度：%s" % heat_text
 	market_heat_label.add_theme_color_override("font_color", heat_color)
 
 	# 汇总
@@ -953,8 +953,8 @@ func _get_short_name(full_name: String) -> String:
 
 ## ===== Toast 强提示 =====
 func _on_competitor_launched_toast(competitor_name: String, _topic_id: String) -> void:
-	_add_log("📢 [color=orange]竞品上线：%s 已发布！[/color]" % competitor_name)
-	_show_toast("⚠️ 竞品上线！%s 已发布！市场热度正在被消耗..." % competitor_name)
+	_add_log("%s [color=orange]竞品上线：%s 已发布！[/color]" % [AssetRegistry.emoji_bbcode("📢"), competitor_name])
+	_show_toast("[!] 竞品上线！%s 已发布！市场热度正在被消耗..." % competitor_name)
 	_refresh_competitor_panel()
 
 

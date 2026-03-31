@@ -46,4 +46,4 @@ func _on_money_changed(_new_amount: int) -> void:
 
 
 func _update_money_display() -> void:
-	money_label.text = "💰 %d" % GameManager.persistent_data.get("money", 0)
+	money_label.text = "$ %d" % GameManager.persistent_data.get("money", 0)

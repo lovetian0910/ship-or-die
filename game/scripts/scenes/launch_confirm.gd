@@ -62,7 +62,7 @@ func _populate_summary() -> void:
 			var detail := Label.new()
 			var quality_hint: String = AICompetitors.get_fuzzy_quality_text(comp.quality)
 			detail.text = "  · %s — %s" % [comp.competitor_name, quality_hint]
-			detail.add_theme_font_size_override("font_size", 13)
+			detail.add_theme_font_size_override("font_size", 15)
 			detail.add_theme_color_override("font_color", Color(0.85, 0.5, 0.5))
 			detail.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 			competitor_detail_box.add_child(detail)
@@ -72,7 +72,7 @@ func _populate_summary() -> void:
 
 	# 未上线竞品提示
 	if pending_count > 0:
-		pending_label.text = "⚡ 未上线竞品：%d 家（还在潜伏）" % pending_count
+		pending_label.text = "[!] 未上线竞品：%d 家（还在潜伏）" % pending_count
 	else:
 		pending_label.text = ""
 

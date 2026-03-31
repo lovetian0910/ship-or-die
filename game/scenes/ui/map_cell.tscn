@@ -10,7 +10,7 @@ theme_override_colors/font_color = Color(1, 1, 1, 1)
 theme_override_colors/font_hover_color = Color(1, 1, 1, 1)
 theme_override_colors/font_pressed_color = Color(0.8, 0.8, 0.8, 1)
 theme_override_colors/font_disabled_color = Color(0.6, 0.6, 0.6, 1)
-theme_override_font_sizes/font_size = 10
+theme_override_font_sizes/font_size = 12
 flat = true
 script = ExtResource("1")
 

@@ -20,7 +20,7 @@ func _add_test_button() -> void:
 	var vbox: VBoxContainer = $CenterContainer/VBoxContainer
 
 	var test_btn := Button.new()
-	test_btn.text = "🐛 测试 Bug Survivor"
+	test_btn.text = "[BUG] 测试 Bug Survivor"
 	test_btn.custom_minimum_size = Vector2(200, 50)
 	test_btn.pressed.connect(_on_test_survivor)
 	vbox.add_child(test_btn)
