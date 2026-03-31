@@ -909,12 +909,12 @@ func _run_bug_survivor_data_test() -> void:
 	var rate: float = data.get_survival_rate()
 	_assert(is_equal_approx(rate, 10.0 / 60.0), "存活率 = 10/60: %.3f" % rate)
 
-	# 推进到30秒 → steady
-	data.advance(20.0)
-	_assert(data.get_result() == "steady", "30秒 → steady: %s" % data.get_result())
+	# 推进到36秒 → steady (36/60=0.6)
+	data.advance(26.0)
+	_assert(data.get_result() == "steady", "36秒 → steady: %s" % data.get_result())
 
 	# 推进到55秒 → risky
-	data.advance(25.0)
+	data.advance(19.0)
 	_assert(data.get_result() == "risky", "55秒 → risky: %s" % data.get_result())
 
 	# 推进超时 → 游戏结束

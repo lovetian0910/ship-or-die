@@ -52,7 +52,7 @@ func get_result() -> String:
 	var rate: float = get_survival_rate()
 	if rate >= 0.9:
 		return "risky"
-	elif rate >= 0.5:
+	elif rate >= 0.6:
 		return "steady"
 	else:
 		return "conservative"
