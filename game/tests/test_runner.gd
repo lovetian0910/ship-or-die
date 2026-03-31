@@ -74,6 +74,9 @@ func _process(_delta: float) -> void:
 			_test_phase = 15
 		15:
 			_run_bug_survivor_data_test()
+			_test_phase = 16
+		16:
+			_run_minigame_no_repeat_test()
 			_test_phase = 99
 		99:
 			_print_summary()
@@ -938,26 +941,48 @@ func _run_bug_survivor_data_test() -> void:
 
 	var si_0: float = data3.get_current_spawn_interval()
 	var sp_0: float = data3.get_current_bug_speed()
-	_assert(is_equal_approx(si_0, 1.0), "0秒生成间隔 = 1.0: %.2f" % si_0)
-	_assert(is_equal_approx(sp_0, 80.0), "0秒速度 = 80: %.1f" % sp_0)
-
-	data3.advance(20.0)
-	var si_20: float = data3.get_current_spawn_interval()
-	var sp_20: float = data3.get_current_bug_speed()
-	_assert(is_equal_approx(si_20, 0.6), "20秒生成间隔 = 0.6: %.2f" % si_20)
-	_assert(is_equal_approx(sp_20, 80.0 * 1.2), "20秒速度 = 96: %.1f" % sp_20)
+	_assert(is_equal_approx(si_0, 0.75), "0秒生成间隔 = 0.75: %.2f" % si_0)
+	_assert(is_equal_approx(sp_0, 80.0 * 1.3), "0秒速度 = 104: %.1f" % sp_0)
 
 	data3.advance(15.0)
-	var si_35: float = data3.get_current_spawn_interval()
-	var sp_35: float = data3.get_current_bug_speed()
-	_assert(is_equal_approx(si_35, 0.35), "35秒生成间隔 = 0.35: %.2f" % si_35)
-	_assert(is_equal_approx(sp_35, 80.0 * 1.5), "35秒速度 = 120: %.1f" % sp_35)
+	var si_15: float = data3.get_current_spawn_interval()
+	var sp_15: float = data3.get_current_bug_speed()
+	_assert(is_equal_approx(si_15, 0.42), "15秒生成间隔 = 0.42: %.2f" % si_15)
+	_assert(is_equal_approx(sp_15, 80.0 * 1.8), "15秒速度 = 144: %.1f" % sp_15)
 
 	data3.advance(15.0)
-	var si_50: float = data3.get_current_spawn_interval()
-	var sp_50: float = data3.get_current_bug_speed()
-	_assert(is_equal_approx(si_50, 0.2), "50秒生成间隔 = 0.2: %.2f" % si_50)
-	_assert(is_equal_approx(sp_50, 80.0 * 1.8), "50秒速度 = 144: %.1f" % sp_50)
+	var si_30: float = data3.get_current_spawn_interval()
+	var sp_30: float = data3.get_current_bug_speed()
+	_assert(is_equal_approx(si_30, 0.26), "30秒生成间隔 = 0.26: %.2f" % si_30)
+	_assert(is_equal_approx(sp_30, 80.0 * 2.2), "30秒速度 = 176: %.1f" % sp_30)
+
+	data3.advance(10.0)
+	var si_40: float = data3.get_current_spawn_interval()
+	var sp_40: float = data3.get_current_bug_speed()
+	_assert(is_equal_approx(si_40, 0.18), "40秒生成间隔 = 0.18: %.2f" % si_40)
+	_assert(is_equal_approx(sp_40, 80.0 * 2.6), "40秒速度 = 208: %.1f" % sp_40)
+
+	# 站着不动模拟：验证30秒内必死
+	_log_section("Bug Survivor — 站桩死亡模拟")
+	var sim_death_times: Array[float] = []
+	for trial: int in range(20):
+		var death_t: float = _simulate_standing_still(preset)
+		sim_death_times.append(death_t)
+
+	var max_survive: float = 0.0
+	var min_survive: float = 999.0
+	var avg_survive: float = 0.0
+	for t: float in sim_death_times:
+		if t > max_survive:
+			max_survive = t
+		if t < min_survive:
+			min_survive = t
+		avg_survive += t
+	avg_survive /= float(sim_death_times.size())
+
+	_log_info("20次站桩模拟: 最短%.1fs, 最长%.1fs, 平均%.1fs" % [min_survive, max_survive, avg_survive])
+	_assert(max_survive < 30.0, "站着不动最长存活 < 30秒: %.1f" % max_survive)
+	_assert(avg_survive < 25.0, "站着不动平均存活 < 25秒: %.1f" % avg_survive)
 
 	# 边缘位置生成测试
 	_log_section("Bug Survivor — 边缘位置生成")
@@ -979,9 +1004,158 @@ func _run_bug_survivor_data_test() -> void:
 	data4.setup(hard_preset)
 	var hard_si: float = data4.get_current_spawn_interval()
 	var hard_sp: float = data4.get_current_bug_speed()
-	_assert(is_equal_approx(hard_si, 1.0 * 0.7), "困难预设生成间隔 = 0.7: %.2f" % hard_si)
-	_assert(is_equal_approx(hard_sp, 100.0 * 1.0 * 1.3), "困难预设速度 = 130: %.1f" % hard_sp)
+	_assert(is_equal_approx(hard_si, 0.75 * 0.7), "困难预设生成间隔 = 0.525: %.3f" % hard_si)
+	_assert(is_equal_approx(hard_sp, 100.0 * 1.3 * 1.3), "困难预设速度 = 169: %.1f" % hard_sp)
 	_log_info("困难预设验证通过: 间隔%.2f, 速度%.1f" % [hard_si, hard_sp])
+
+
+## ===== 小游戏类型不重复测试 =====
+
+func _run_minigame_no_repeat_test() -> void:
+	_log_section("小游戏类型不连续重复测试")
+
+	# 模拟 _pick_fight_event 的核心逻辑：
+	# 加载所有打类事件，按 minigame_type 分两组
+	var all_fight_paths: Array[String] = [
+		"res://resources/events/fight_tech_01.tres",
+		"res://resources/events/fight_tech_02.tres",
+		"res://resources/events/fight_team_01.tres",
+		"res://resources/events/fight_team_02.tres",
+		"res://resources/events/fight_external_01.tres",
+		"res://resources/events/fight_external_02.tres",
+		"res://resources/events/fight_survivor_01.tres",
+		"res://resources/events/fight_survivor_02.tres",
+	]
+	var code_rescue_events: Array[EventData] = []
+	var bug_survivor_events: Array[EventData] = []
+	for path: String in all_fight_paths:
+		var res: Resource = load(path)
+		if res is EventData:
+			var ev: EventData = res as EventData
+			if ev.minigame_type == "bug_survivor":
+				bug_survivor_events.append(ev)
+			else:
+				code_rescue_events.append(ev)
+
+	_assert(code_rescue_events.size() >= 2, "code_rescue 事件 >= 2: %d" % code_rescue_events.size())
+	_assert(bug_survivor_events.size() >= 2, "bug_survivor 事件 >= 2: %d" % bug_survivor_events.size())
+
+	# 模拟连续10次选择，验证不会连续同类型
+	var last_type: String = ""
+	var repeat_found: bool = false
+	var sequence: String = ""
+	for i: int in range(10):
+		# 模拟 _pick_fight_event 的核心逻辑
+		var candidates: Array[EventData] = []
+		candidates.append_array(code_rescue_events)
+		candidates.append_array(bug_survivor_events)
+		candidates.shuffle()
+
+		var picked: EventData = null
+		# 优先选不同类型
+		for ev: EventData in candidates:
+			var ev_type: String = ev.minigame_type if ev.minigame_type != "" else "code_rescue"
+			if ev_type != last_type:
+				picked = ev
+				break
+		if picked == null:
+			picked = candidates[0]
+
+		var picked_type: String = picked.minigame_type if picked.minigame_type != "" else "code_rescue"
+		sequence += picked_type.substr(0, 1)  # b 或 c
+		if picked_type == last_type:
+			repeat_found = true
+		last_type = picked_type
+
+	_assert(not repeat_found, "10次选择无连续重复类型: %s" % sequence)
+	_log_info("选择序列: %s" % sequence)
+
+
+## ===== 站桩死亡模拟 =====
+## 模拟玩家站在竞技场中心不动，只靠自动射击，计算何时被虫子碰到
+func _simulate_standing_still(p_preset: BugSurvivorPreset) -> float:
+	var arena: Vector2 = Config.BUG_SURVIVOR_ARENA_SIZE
+	var player_pos: Vector2 = arena / 2.0
+	var player_r: float = Config.BUG_SURVIVOR_PLAYER_RADIUS
+	var bug_r: float = Config.BUG_SURVIVOR_BUG_RADIUS
+	var bullet_speed: float = Config.BUG_SURVIVOR_BULLET_SPEED
+	var bullet_r: float = Config.BUG_SURVIVOR_BULLET_RADIUS
+	var shoot_interval: float = p_preset.get_bullet_interval()
+
+	var dt: float = 0.05  # 模拟步长
+	var elapsed: float = 0.0
+	var spawn_timer: float = 0.0
+	var shoot_timer: float = 0.0
+
+	# 虫子列表: [{pos: Vector2}]
+	var bugs: Array[Dictionary] = []
+	# 子弹列表: [{pos: Vector2, dir: Vector2}]
+	var bullets: Array[Dictionary] = []
+
+	while elapsed < 60.0:
+		elapsed += dt
+
+		# 生成虫子
+		var si: float = p_preset.get_spawn_interval(elapsed)
+		spawn_timer += dt
+		while spawn_timer >= si:
+			spawn_timer -= si
+			bugs.append({"pos": BugSurvivorData.random_edge_position(arena)})
+
+		# 射击最近虫子
+		shoot_timer += dt
+		if shoot_timer >= shoot_interval and bugs.size() > 0:
+			shoot_timer -= shoot_interval
+			var nearest_idx: int = 0
+			var nearest_dist: float = INF
+			for i: int in range(bugs.size()):
+				var d: float = player_pos.distance_to(bugs[i]["pos"] as Vector2)
+				if d < nearest_dist:
+					nearest_dist = d
+					nearest_idx = i
+			var dir: Vector2 = player_pos.direction_to(bugs[nearest_idx]["pos"] as Vector2)
+			bullets.append({"pos": player_pos, "dir": dir})
+
+		# 移动虫子
+		var bug_speed: float = p_preset.get_bug_speed(elapsed)
+		var i: int = bugs.size() - 1
+		while i >= 0:
+			var bpos: Vector2 = bugs[i]["pos"] as Vector2
+			var dir: Vector2 = (player_pos - bpos).normalized()
+			bpos += dir * bug_speed * dt
+			bugs[i]["pos"] = bpos
+			# 碰撞检测
+			if bpos.distance_to(player_pos) < player_r + bug_r:
+				return elapsed
+			i -= 1
+
+		# 移动子弹 & 碰撞
+		var bi: int = bullets.size() - 1
+		while bi >= 0:
+			var bpos: Vector2 = bullets[bi]["pos"] as Vector2
+			var bdir: Vector2 = bullets[bi]["dir"] as Vector2
+			bpos += bdir * bullet_speed * dt
+			bullets[bi]["pos"] = bpos
+			# 出界
+			if bpos.x < -50 or bpos.x > arena.x + 50 or bpos.y < -50 or bpos.y > arena.y + 50:
+				bullets.remove_at(bi)
+				bi -= 1
+				continue
+			# 命中虫子
+			var hit: bool = false
+			var gi: int = bugs.size() - 1
+			while gi >= 0:
+				var gpos: Vector2 = bugs[gi]["pos"] as Vector2
+				if bpos.distance_to(gpos) < bullet_r + bug_r:
+					bugs.remove_at(gi)
+					hit = true
+					break
+				gi -= 1
+			if hit:
+				bullets.remove_at(bi)
+			bi -= 1
+
+	return 60.0  # 存活到结束
 
 
 ## ===== 汇总 =====

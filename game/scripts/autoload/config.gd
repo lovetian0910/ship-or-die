@@ -149,16 +149,16 @@ const RARITY_TYPE_WEIGHTS: Dictionary = {
 const BUG_SURVIVOR_GAME_DURATION: float = 60.0      ## 总时长（秒）
 const BUG_SURVIVOR_ARENA_SIZE: Vector2 = Vector2(800, 600)  ## 竞技场尺寸
 const BUG_SURVIVOR_PLAYER_SPEED: float = 200.0      ## 玩家移速（像素/秒）
-const BUG_SURVIVOR_PLAYER_RADIUS: float = 16.0      ## 玩家碰撞半径
+const BUG_SURVIVOR_PLAYER_RADIUS: float = 32.0      ## 玩家碰撞半径（2×）
 const BUG_SURVIVOR_BULLET_SPEED: float = 400.0      ## 子弹速度（像素/秒）
-const BUG_SURVIVOR_BULLET_INTERVAL: float = 0.3     ## 射击间隔（秒）
-const BUG_SURVIVOR_BULLET_RADIUS: float = 6.0       ## 子弹碰撞半径
-const BUG_SURVIVOR_BUG_RADIUS: float = 12.0         ## 虫子碰撞半径
+const BUG_SURVIVOR_BULLET_INTERVAL: float = 0.35    ## 射击间隔（秒，略慢，火力密度降低）
+const BUG_SURVIVOR_BULLET_RADIUS: float = 8.0       ## 子弹碰撞半径
+const BUG_SURVIVOR_BUG_RADIUS: float = 24.0         ## 虫子碰撞半径（2×）
 
-## 难度曲线：[{time_start, spawn_interval, speed_multiplier}]
+## 难度曲线：站着不动30秒内必死
 const BUG_SURVIVOR_SPAWN_CURVE: Array = [
-	{"time_start": 0.0, "spawn_interval": 1.0, "speed_multiplier": 1.0},
-	{"time_start": 15.0, "spawn_interval": 0.6, "speed_multiplier": 1.2},
-	{"time_start": 30.0, "spawn_interval": 0.35, "speed_multiplier": 1.5},
-	{"time_start": 45.0, "spawn_interval": 0.2, "speed_multiplier": 1.8},
+	{"time_start": 0.0, "spawn_interval": 0.75, "speed_multiplier": 1.3},
+	{"time_start": 9.0, "spawn_interval": 0.42, "speed_multiplier": 1.8},
+	{"time_start": 20.0, "spawn_interval": 0.26, "speed_multiplier": 2.2},
+	{"time_start": 35.0, "spawn_interval": 0.18, "speed_multiplier": 2.6},
 ]

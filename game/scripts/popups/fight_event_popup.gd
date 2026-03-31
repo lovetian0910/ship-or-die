@@ -15,6 +15,7 @@ var _desc_label: Label
 var _option_labels: Array[Label] = []
 var _start_btn: Button
 var _info_panel: PanelContainer
+var _event_image: TextureRect
 
 ## 代码急救场景
 var _rescue_game: Control = null
@@ -29,6 +30,12 @@ func setup(event_data: EventData) -> void:
 	_event = event_data
 	_title_label.text = "⚠ " + event_data.title
 	_desc_label.text = event_data.description
+
+	# 加载事件配图
+	var tex: Texture2D = AssetRegistry.get_texture("event", event_data.event_id)
+	if tex and is_instance_valid(_event_image):
+		_event_image.texture = tex
+		_event_image.visible = true
 
 	# 显示三个选项对应关系
 	_option_labels[0].text = "存活 <60%%：%s" % event_data.fight_conservative_desc
@@ -168,6 +175,15 @@ func _build_ui() -> void:
 	# 分隔线
 	var sep := HSeparator.new()
 	vbox.add_child(sep)
+
+	# 事件配图
+	_event_image = TextureRect.new()
+	_event_image.visible = false
+	_event_image.custom_minimum_size = Vector2(180, 180)
+	_event_image.expand_mode = TextureRect.EXPAND_FIT_WIDTH_PROPORTIONAL
+	_event_image.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+	_event_image.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
+	vbox.add_child(_event_image)
 
 	# 描述
 	_desc_label = Label.new()

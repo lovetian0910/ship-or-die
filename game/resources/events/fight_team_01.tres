@@ -1,0 +1,27 @@
+[gd_resource type="Resource" script_class="EventData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/resources/event_data.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+event_id = "fight_team_01"
+title = "核心程序员提桶跑路"
+description = "周一早上，你发现核心程序员的工位空了。桌上只有一张纸条：'生活不止有代码，还有隔壁公司开的双倍薪资。'更糟的是，他负责的模块只有他自己看得懂。"
+event_type = 1
+search_benefit_type = 0
+search_benefit_value = 0.0
+search_benefit_desc = ""
+search_month_cost = 0
+fight_preset_path = "res://resources/minigame_presets/team_conflict.tres"
+fight_conservative_desc = "认栽重写：品质 -8"
+fight_conservative_quality = -8.0
+fight_conservative_month_cost = 0
+fight_steady_desc = "高薪留人：消除品质损失"
+fight_steady_quality = 0.0
+fight_steady_month_cost = 0
+fight_risky_desc = "连夜破译代码：消除损失 + 品质 +3（重构后更优雅）"
+fight_risky_quality = 3.0
+fight_risky_speed_bonus = 0.0
+fight_risky_month_cost = 0
+allowed_phases = [&"early", &"mid", &"late"]
+is_fixed = false

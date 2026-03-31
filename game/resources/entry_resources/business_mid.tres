@@ -1,0 +1,15 @@
+[gd_resource type="Resource" script_class="EntryResourceData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/resources/entry_resource_data.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+category = 2
+tier = 1
+display_name = "万能商务"
+description = "老油条，大部分事件能搞定"
+price = 300
+quality_cap = 0.0
+dev_speed = 1.0
+energy = 12
+option_unlock = "full"

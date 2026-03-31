@@ -1,0 +1,27 @@
+[gd_resource type="Resource" script_class="EventData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/resources/event_data.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+event_id = "search_talent_02"
+title = "灵感时刻"
+description = "凌晨三点，主创在马桶上突然想到一个绝妙的设计。他激动地在工作群连发了十八条60秒语音，附赠一张餐巾纸上的手绘原型图。虽然字迹像心电图，但这个idea确实牛。"
+event_type = 0
+search_benefit_type = 0
+search_benefit_value = 10.0
+search_benefit_desc = "品质上限 +10"
+search_month_cost = 3
+fight_preset_path = ""
+fight_conservative_desc = ""
+fight_conservative_quality = 0.0
+fight_conservative_month_cost = 0
+fight_steady_desc = ""
+fight_steady_quality = 0.0
+fight_steady_month_cost = 0
+fight_risky_desc = ""
+fight_risky_quality = 0.0
+fight_risky_speed_bonus = 0.0
+fight_risky_month_cost = 0
+allowed_phases = [&"early", &"mid"]
+is_fixed = true

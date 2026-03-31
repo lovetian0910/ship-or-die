@@ -1,0 +1,13 @@
+[gd_resource type="Resource" script_class="TopicData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/resources/topic_data.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = &"mecha_royale"
+display_name = "铁甲大逃杀"
+description = "100个机甲跳伞，只有1个能活着离开"
+initial_heat = 45.0
+phase_offset = 1.5708
+amplitude = 30.0
+noise_seed = 137

@@ -1,0 +1,15 @@
+[gd_resource type="Resource" script_class="EntryResourceData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/resources/entry_resource_data.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+category = 0
+tier = 1
+display_name = "鹅皇互娱主创"
+description = "大厂历练过，能做出像样的东西"
+price = 300
+quality_cap = 70.0
+dev_speed = 1.0
+energy = 0
+option_unlock = ""

@@ -1,0 +1,27 @@
+[gd_resource type="Resource" script_class="EventData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/resources/event_data.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+event_id = "search_resource_01"
+title = "友商内鬼"
+description = "一个'行业朋友'约你喝咖啡，席间'不小心'透露了竞品的上线排期和核心数据。你知道这种信息不该听，但你的手已经在记笔记了。花点时间消化一下这些'公开信息'。"
+event_type = 0
+search_benefit_type = 3
+search_benefit_value = 3.0
+search_benefit_desc = "代码急救精力 +3"
+search_month_cost = 1
+fight_preset_path = ""
+fight_conservative_desc = ""
+fight_conservative_quality = 0.0
+fight_conservative_month_cost = 0
+fight_steady_desc = ""
+fight_steady_quality = 0.0
+fight_steady_month_cost = 0
+fight_risky_desc = ""
+fight_risky_quality = 0.0
+fight_risky_speed_bonus = 0.0
+fight_risky_month_cost = 0
+allowed_phases = [&"mid", &"late"]
+is_fixed = false

@@ -1,0 +1,13 @@
+[gd_resource type="Resource" script_class="TopicData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/resources/topic_data.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = &"star_ranch"
+display_name = "星际牧场物语"
+description = "在外太空种地养鸡，逃避现实的终极形态"
+initial_heat = 40.0
+phase_offset = 4.71239
+amplitude = 22.0
+noise_seed = 999

@@ -1,0 +1,27 @@
+[gd_resource type="Resource" script_class="EventData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/resources/event_data.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+event_id = "search_quality_01"
+title = "反面教材研究"
+description = "竞品刚发了一篇万字复盘文《我们是怎么把月活从500万做到5万的》。字字泣血，全是踩过的坑。别人的棺材板——啊不，经验，就是你的捷径。"
+event_type = 0
+search_benefit_type = 2
+search_benefit_value = 5.0
+search_benefit_desc = "品质 +5（避坑加成）"
+search_month_cost = 2
+fight_preset_path = ""
+fight_conservative_desc = ""
+fight_conservative_quality = 0.0
+fight_conservative_month_cost = 0
+fight_steady_desc = ""
+fight_steady_quality = 0.0
+fight_steady_month_cost = 0
+fight_risky_desc = ""
+fight_risky_quality = 0.0
+fight_risky_speed_bonus = 0.0
+fight_risky_month_cost = 0
+allowed_phases = [&"early", &"mid", &"late"]
+is_fixed = false

@@ -25,7 +25,11 @@ var _result_label: Label
 var _result_btn: Button
 var _arena_bg: ColorRect
 
-## ===== 游戏数据 =====
+## ===== 玩家动画 =====
+var _player_sprite: Sprite2D = null
+var _anim_timer: float = 0.0
+const ANIM_FPS: float = 8.0  # 帧动画速率
+const TOP_BAR_HEIGHT: float = 44.0  # 顶栏预留高度
 var _data: BugSurvivorData
 var _preset: BugSurvivorPreset
 var _is_running: bool = false
@@ -48,9 +52,18 @@ func setup(preset: BugSurvivorPreset, _business_level: int) -> void:
 	_data.setup(preset)
 
 	var viewport_size: Vector2 = get_viewport_rect().size
-	_arena_offset = (viewport_size - _arena_size) / 2.0
+	# 竞技场垂直居中时考虑顶栏偏移
+	_arena_offset = Vector2(
+		(viewport_size.x - _arena_size.x) / 2.0,
+		TOP_BAR_HEIGHT + (viewport_size.y - TOP_BAR_HEIGHT - _arena_size.y) / 2.0
+	)
 	_arena.position = _arena_offset
 	_arena_bg.size = _arena_size
+
+	# 设置边框尺寸
+	for child: Node in _arena.get_children():
+		if child is ReferenceRect and child.has_meta("_is_border"):
+			(child as ReferenceRect).size = _arena_size
 
 	_player.position = _arena_size / 2.0
 
@@ -73,6 +86,13 @@ func _process(delta: float) -> void:
 		return
 
 	_move_player(delta)
+
+	# 玩家帧动画
+	if _player_sprite and _is_running:
+		_anim_timer += delta
+		if _anim_timer >= 1.0 / ANIM_FPS:
+			_anim_timer -= 1.0 / ANIM_FPS
+			_player_sprite.frame = (_player_sprite.frame + 1) % _player_sprite.hframes
 
 	_shoot_timer += delta
 	var interval: float = _preset.get_bullet_interval()
@@ -104,6 +124,12 @@ func _move_player(delta: float) -> void:
 
 	if dir.length_squared() > 0:
 		dir = dir.normalized()
+		# 翻转精灵方向
+		if _player_sprite:
+			if dir.x < 0:
+				_player_sprite.flip_h = true
+			elif dir.x > 0:
+				_player_sprite.flip_h = false
 
 	var speed: float = _preset.get_player_speed()
 	_player.position += dir * speed * delta
@@ -145,12 +171,17 @@ func _shoot_nearest_bug() -> void:
 	bullet.collision_layer = 2
 	bullet.collision_mask = 4
 
-	var visual := ColorRect.new()
-	var bsize: float = Config.BUG_SURVIVOR_BULLET_RADIUS * 2.0
-	visual.size = Vector2(bsize, bsize)
-	visual.position = Vector2(-bsize / 2.0, -bsize / 2.0)
-	visual.color = COLOR_BULLET
-	bullet.add_child(visual)
+	# 代码字符作为子弹视觉
+	var code_chars: Array[String] = [
+		"{", "}", "(", ")", ";", "=", "++", "!=", "&&", "||",
+		"if", "for", "var", "int", "0x", "//", "->", ":=", "<<", ">>",
+	]
+	var bullet_label := Label.new()
+	bullet_label.text = code_chars[randi_range(0, code_chars.size() - 1)]
+	bullet_label.add_theme_font_size_override("font_size", 14)
+	bullet_label.add_theme_color_override("font_color", COLOR_BULLET)
+	bullet_label.position = Vector2(-8, -10)
+	bullet.add_child(bullet_label)
 
 	bullet.set_meta("direction", direction)
 	bullet.set_meta("speed", Config.BUG_SURVIVOR_BULLET_SPEED)
@@ -173,19 +204,37 @@ func _spawn_bug() -> void:
 	bug.collision_layer = 4
 	bug.collision_mask = 3
 
-	var visual := ColorRect.new()
-	var bsize: float = Config.BUG_SURVIVOR_BUG_RADIUS * 2.5
-	visual.size = Vector2(bsize, bsize)
-	visual.position = Vector2(-bsize / 2.0, -bsize / 2.0)
-	visual.color = COLOR_BUG
-	bug.add_child(visual)
+	# Bug 视觉
+	var bug_tex: Texture2D = AssetRegistry.get_texture("minigame", "bug")
+	if bug_tex:
+		var bug_sprite := TextureRect.new()
+		bug_sprite.texture = bug_tex
+		var bsize: float = Config.BUG_SURVIVOR_BUG_RADIUS * 2.5
+		bug_sprite.custom_minimum_size = Vector2(bsize, bsize)
+		bug_sprite.size = Vector2(bsize, bsize)
+		bug_sprite.position = Vector2(-bsize / 2.0, -bsize / 2.0)
+		bug_sprite.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+		bug_sprite.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+		bug.add_child(bug_sprite)
+	else:
+		var visual := ColorRect.new()
+		var bsize: float = Config.BUG_SURVIVOR_BUG_RADIUS * 2.5
+		visual.size = Vector2(bsize, bsize)
+		visual.position = Vector2(-bsize / 2.0, -bsize / 2.0)
+		visual.color = COLOR_BUG
+		bug.add_child(visual)
 
-	var label := Label.new()
-	label.text = "BUG"
-	label.add_theme_font_size_override("font_size", 10)
-	label.add_theme_color_override("font_color", Color.WHITE)
-	label.position = Vector2(-12, -8)
-	bug.add_child(label)
+		var label := Label.new()
+		label.text = "BUG"
+		label.add_theme_font_size_override("font_size", 10)
+		label.add_theme_color_override("font_color", Color.WHITE)
+		label.position = Vector2(-12, -8)
+		bug.add_child(label)
+
+	# 随机相位偏移，让每只虫子晃动节奏不同
+	bug.set_meta("wobble_phase", randf() * TAU)
+	var bsize_for_meta: float = Config.BUG_SURVIVOR_BUG_RADIUS * 2.5
+	bug.set_meta("visual_base_y", -bsize_for_meta / 2.0)
 
 	_bugs_container.add_child(bug)
 
@@ -193,6 +242,7 @@ func _spawn_bug() -> void:
 func _move_bugs(delta: float) -> void:
 	var bug_speed: float = _data.get_current_bug_speed()
 	var player_pos: Vector2 = _player.position
+	var time_sec: float = _data.elapsed
 
 	for child: Node in _bugs_container.get_children():
 		var bug: Area2D = child as Area2D
@@ -200,6 +250,22 @@ func _move_bugs(delta: float) -> void:
 			continue
 		var dir: Vector2 = (player_pos - bug.position).normalized()
 		bug.position += dir * bug_speed * delta
+
+		# 朝向：素材默认头朝右，在玩家左边时朝右飞（不翻），在右边时朝左飞（翻转）
+		if dir.x < 0:
+			bug.scale.x = -1.0
+		elif dir.x > 0:
+			bug.scale.x = 1.0
+
+		# 上下微晃，模拟飞行（振幅3px，频率8Hz，每只虫子相位不同）
+		var phase: float = bug.get_meta("wobble_phase", 0.0) as float
+		var wobble_y: float = sin(time_sec * 8.0 + phase) * 3.0
+		var base_offset: float = bug.get_meta("visual_base_y", 0.0) as float
+		for visual_child: Node in bug.get_children():
+			if visual_child is CollisionShape2D:
+				continue
+			if visual_child is CanvasItem:
+				(visual_child as CanvasItem).position.y = base_offset + wobble_y
 
 		var dist: float = bug.position.distance_to(player_pos)
 		if dist < Config.BUG_SURVIVOR_PLAYER_RADIUS + Config.BUG_SURVIVOR_BUG_RADIUS:
@@ -288,9 +354,29 @@ func _build_ui() -> void:
 	_arena = Node2D.new()
 	add_child(_arena)
 
+	# 竞技场边框（透明底 + 发光边框线）
 	_arena_bg = ColorRect.new()
-	_arena_bg.color = Color(0.06, 0.06, 0.12)
+	_arena_bg.color = Color(0, 0, 0, 0)  # 完全透明
 	_arena.add_child(_arena_bg)
+
+	var border := ReferenceRect.new()
+	border.editor_only = false
+	border.border_color = Color(0.3, 0.8, 0.6, 0.4)
+	border.border_width = 2.0
+	_arena.add_child(border)
+	border.set_meta("_is_border", true)  # 标记，setup 时设尺寸
+
+	# 背景图（办公室，与代码急救统一风格）
+	var bg_tex: Texture2D = AssetRegistry.get_texture("background", "office")
+	if bg_tex:
+		var bg_img := TextureRect.new()
+		bg_img.texture = bg_tex
+		bg_img.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+		bg_img.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_COVERED
+		bg_img.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+		bg_img.modulate = Color(1, 1, 1, 0.15)
+		add_child(bg_img)
+		move_child(bg_img, 1)  # 放在纯色底之上、arena之下
 
 	_player = Area2D.new()
 	_player.collision_layer = 1
@@ -302,19 +388,32 @@ func _build_ui() -> void:
 	player_col.shape = player_circle
 	_player.add_child(player_col)
 
-	var player_visual := ColorRect.new()
-	var psize: float = Config.BUG_SURVIVOR_PLAYER_RADIUS * 2.5
-	player_visual.size = Vector2(psize, psize)
-	player_visual.position = Vector2(-psize / 2.0, -psize / 2.0)
-	player_visual.color = COLOR_PLAYER
-	_player.add_child(player_visual)
+	# 玩家视觉
+	var player_tex: Texture2D = AssetRegistry.get_texture("minigame", "player_run")
+	if player_tex:
+		_player_sprite = Sprite2D.new()
+		_player_sprite.texture = player_tex
+		_player_sprite.hframes = 6  # 6帧横排 sprite sheet
+		_player_sprite.frame = 0
+		# 缩放到合适大小（原始每帧32×48，放大到适合游戏的尺寸）
+		var target_h: float = Config.BUG_SURVIVOR_PLAYER_RADIUS * 3.0
+		var scale_factor: float = target_h / 48.0
+		_player_sprite.scale = Vector2(scale_factor, scale_factor)
+		_player.add_child(_player_sprite)
+	else:
+		var player_visual := ColorRect.new()
+		var psize: float = Config.BUG_SURVIVOR_PLAYER_RADIUS * 2.5
+		player_visual.size = Vector2(psize, psize)
+		player_visual.position = Vector2(-psize / 2.0, -psize / 2.0)
+		player_visual.color = COLOR_PLAYER
+		_player.add_child(player_visual)
 
-	var player_label := Label.new()
-	player_label.text = "P"
-	player_label.add_theme_font_size_override("font_size", 18)
-	player_label.add_theme_color_override("font_color", Color.WHITE)
-	player_label.position = Vector2(-6, -12)
-	_player.add_child(player_label)
+		var player_label := Label.new()
+		player_label.text = "P"
+		player_label.add_theme_font_size_override("font_size", 18)
+		player_label.add_theme_color_override("font_color", Color.WHITE)
+		player_label.position = Vector2(-6, -12)
+		_player.add_child(player_label)
 
 	_player.area_entered.connect(_on_player_area_entered)
 
@@ -326,14 +425,11 @@ func _build_ui() -> void:
 	_bugs_container = Node2D.new()
 	_arena.add_child(_bugs_container)
 
-	var hud_layer := CanvasLayer.new()
-	hud_layer.layer = 10
-	add_child(hud_layer)
-
+	# HUD（不用 CanvasLayer，避免遮挡 PersistentUI 顶栏）
 	var hud_hbox := HBoxContainer.new()
-	hud_hbox.position = Vector2(20, 10)
+	hud_hbox.position = Vector2(20, TOP_BAR_HEIGHT + 6)
 	hud_hbox.add_theme_constant_override("separation", 40)
-	hud_layer.add_child(hud_hbox)
+	add_child(hud_hbox)
 
 	_timer_label = Label.new()
 	_timer_label.text = "剩余：60.0 秒"
@@ -351,8 +447,8 @@ func _build_ui() -> void:
 	hint_label.text = "方向键/WASD 移动 | 自动射击"
 	hint_label.add_theme_font_size_override("font_size", 14)
 	hint_label.add_theme_color_override("font_color", Color(0.5, 0.5, 0.5))
-	hint_label.position = Vector2(20, 42)
-	hud_layer.add_child(hint_label)
+	hint_label.position = Vector2(20, TOP_BAR_HEIGHT + 38)
+	add_child(hint_label)
 
 	_result_panel = PanelContainer.new()
 	_result_panel.visible = false

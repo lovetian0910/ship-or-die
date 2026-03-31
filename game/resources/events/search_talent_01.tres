@@ -1,0 +1,27 @@
+[gd_resource type="Resource" script_class="EventData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/resources/event_data.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+event_id = "search_talent_01"
+title = "野生大神出没"
+description = "你在某个技术论坛发现一个匿名用户，用200行代码实现了你们团队写了两个月的核心功能。评论区有人喊'封神'，也有人说'这代码没注释，维护的人会疯'。你可以花时间把他挖过来。"
+event_type = 0
+search_benefit_type = 0
+search_benefit_value = 8.0
+search_benefit_desc = "品质上限 +8"
+search_month_cost = 2
+fight_preset_path = ""
+fight_conservative_desc = ""
+fight_conservative_quality = 0.0
+fight_conservative_month_cost = 0
+fight_steady_desc = ""
+fight_steady_quality = 0.0
+fight_steady_month_cost = 0
+fight_risky_desc = ""
+fight_risky_quality = 0.0
+fight_risky_speed_bonus = 0.0
+fight_risky_month_cost = 0
+allowed_phases = [&"early", &"mid"]
+is_fixed = true

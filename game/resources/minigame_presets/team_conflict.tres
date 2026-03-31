@@ -1,0 +1,14 @@
+[gd_resource type="Resource" script_class="CodeRescuePreset" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/resources/code_rescue_preset.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+preset_id = "team_conflict"
+preset_name = "负面情绪在团队蔓延"
+flavor_text = "团队士气崩了，消极情绪像病毒一样扩散。每个红点都是一个闹情绪的人，点击安抚他们！"
+initial_bug_count = 5
+spread_interval = 2.0
+use_business_energy = false
+fixed_energy = 10
+spawn_mode = "scattered"

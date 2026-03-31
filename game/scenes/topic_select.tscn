@@ -1,0 +1,88 @@
+[gd_scene load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/scenes/topic_select.gd" id="1"]
+
+[node name="TopicSelect" type="Control"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("1")
+
+[node name="Background" type="ColorRect" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+color = Color(0.08, 0.09, 0.12, 1)
+
+[node name="MarginContainer" type="MarginContainer" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+theme_override_constants/margin_left = 40
+theme_override_constants/margin_top = 55
+theme_override_constants/margin_right = 40
+theme_override_constants/margin_bottom = 30
+
+[node name="VBoxContainer" type="VBoxContainer" parent="MarginContainer"]
+layout_mode = 2
+theme_override_constants/separation = 20
+
+[node name="TitleLabel" type="Label" parent="MarginContainer/VBoxContainer"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 28
+text = "选择题材 — 你要做什么游戏？"
+horizontal_alignment = 1
+
+[node name="HintLabel" type="Label" parent="MarginContainer/VBoxContainer"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 14
+theme_override_colors/font_color = Color(0.6, 0.65, 0.7, 1)
+text = "观察市场热度，选择你的方向。热门题材竞争激烈，冷门题材用户有限。"
+horizontal_alignment = 1
+
+[node name="CenterContainer" type="CenterContainer" parent="MarginContainer/VBoxContainer"]
+layout_mode = 2
+size_flags_vertical = 3
+
+[node name="CardsContainer" type="HBoxContainer" parent="MarginContainer/VBoxContainer/CenterContainer"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_constants/separation = 20
+
+[node name="ConfirmSection" type="VBoxContainer" parent="MarginContainer/VBoxContainer"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_constants/separation = 12
+
+[node name="SelectedLabel" type="Label" parent="MarginContainer/VBoxContainer/ConfirmSection"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_font_sizes/font_size = 18
+text = "已选题材：xxx"
+horizontal_alignment = 1
+
+[node name="InputCenter" type="CenterContainer" parent="MarginContainer/VBoxContainer/ConfirmSection"]
+layout_mode = 2
+
+[node name="GameNameInput" type="LineEdit" parent="MarginContainer/VBoxContainer/ConfirmSection/InputCenter"]
+unique_name_in_owner = true
+layout_mode = 2
+custom_minimum_size = Vector2(400, 40)
+placeholder_text = "为你的游戏起个名字..."
+alignment = 1
+max_length = 20
+
+[node name="ButtonCenter" type="CenterContainer" parent="MarginContainer/VBoxContainer/ConfirmSection"]
+layout_mode = 2
+
+[node name="ConfirmButton" type="Button" parent="MarginContainer/VBoxContainer/ConfirmSection/ButtonCenter"]
+unique_name_in_owner = true
+layout_mode = 2
+custom_minimum_size = Vector2(250, 50)
+theme_override_font_sizes/font_size = 18
+text = "确认，开始研发 →"

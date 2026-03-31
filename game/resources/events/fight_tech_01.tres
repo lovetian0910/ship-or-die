@@ -1,0 +1,27 @@
+[gd_resource type="Resource" script_class="EventData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/resources/event_data.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+event_id = "fight_tech_01"
+title = "引擎突然收费"
+description = "你用的游戏引擎突然宣布新的收费政策：按安装量收费。你的技术群瞬间炸了，有人在写公开信，有人在找替代方案，有人已经开始用自研引擎重写了——虽然那个引擎目前只能渲染一个三角形。"
+event_type = 1
+search_benefit_type = 0
+search_benefit_value = 0.0
+search_benefit_desc = ""
+search_month_cost = 0
+fight_preset_path = "res://resources/minigame_presets/tech_accident.tres"
+fight_conservative_desc = "交钱保平安：品质 -5"
+fight_conservative_quality = -5.0
+fight_conservative_month_cost = 0
+fight_steady_desc = "商务出面谈折扣：消除品质损失"
+fight_steady_quality = 0.0
+fight_steady_month_cost = 0
+fight_risky_desc = "趁机换自研引擎：消除损失 + 时间效率永久 +10%"
+fight_risky_quality = 0.0
+fight_risky_speed_bonus = 0.1
+fight_risky_month_cost = 0
+allowed_phases = [&"early", &"mid"]
+is_fixed = false

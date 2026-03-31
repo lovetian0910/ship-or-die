@@ -1,0 +1,27 @@
+[gd_resource type="Resource" script_class="EventData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/resources/event_data.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+event_id = "fight_tech_02"
+title = "服务器着火了（真的着火了）"
+description = "不是比喻，是物理意义上的着火。机房空调坏了三天没人发现，测试服务器过热自燃。好消息：没烧到生产环境。坏消息：这周的所有测试数据没了。更坏的消息：下周要内测。"
+event_type = 1
+search_benefit_type = 0
+search_benefit_value = 0.0
+search_benefit_desc = ""
+search_month_cost = 0
+fight_preset_path = "res://resources/minigame_presets/tech_accident.tres"
+fight_conservative_desc = "接受数据丢失：品质 -7"
+fight_conservative_quality = -7.0
+fight_conservative_month_cost = 0
+fight_steady_desc = "紧急找云服务商恢复：消除品质损失"
+fight_steady_quality = 0.0
+fight_steady_month_cost = 0
+fight_risky_desc = "顺势迁移上云：消除损失 + 后续研发速度 +15%"
+fight_risky_quality = 0.0
+fight_risky_speed_bonus = 0.15
+fight_risky_month_cost = 0
+allowed_phases = [&"mid", &"late"]
+is_fixed = false

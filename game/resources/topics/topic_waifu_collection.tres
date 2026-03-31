@@ -1,0 +1,13 @@
+[gd_resource type="Resource" script_class="TopicData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/resources/topic_data.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = &"waifu_collection"
+display_name = "纸片老婆大作战"
+description = "抽卡、养老婆、打深渊，三合一永动机"
+initial_heat = 55.0
+phase_offset = 3.14159
+amplitude = 20.0
+noise_seed = 256
