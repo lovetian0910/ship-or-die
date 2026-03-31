@@ -1,6 +1,6 @@
 [gd_resource type="Theme" load_steps=14 format=3]
 
-[ext_resource type="FontFile" path="res://assets/fonts/NotoSansSC-Regular.ttf" id="cjk_font"]
+[ext_resource type="FontFile" path="res://assets/fonts/fusion-pixel-12px-proportional-zh_hans.otf" id="cjk_font"]
 [ext_resource type="StyleBox" path="res://resources/theme/styles/panel_style.tres" id="panel_style"]
 [ext_resource type="StyleBox" path="res://resources/theme/styles/panel_container_style.tres" id="panel_container_style"]
 [ext_resource type="StyleBox" path="res://resources/theme/styles/btn_normal.tres" id="btn_normal"]
