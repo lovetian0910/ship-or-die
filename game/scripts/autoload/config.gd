@@ -1,6 +1,13 @@
 # config.gd — 数值配置常量集中管理
 extends Node
 
+func _ready() -> void:
+	# 设置 Emoji 字体为中文字体的 fallback（Web 端无系统字体）
+	var main_font: FontFile = load("res://assets/fonts/NotoSansSC-Regular.ttf") as FontFile
+	var emoji_font: FontFile = load("res://assets/fonts/NotoEmoji-Regular.ttf") as FontFile
+	if main_font and emoji_font:
+		main_font.fallbacks = [emoji_font]
+
 ## ===== 时间系统（混合制：离散月份 + 实时小游戏）=====
 const TIME_TOTAL_MONTHS: int = 36               ## 总研发预算（月）
 const TIME_WARNING_THRESHOLD: float = 0.2       ## 剩余20%触发警告（≤7个月）
