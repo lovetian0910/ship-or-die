@@ -291,8 +291,68 @@ func _move_bullets(delta: float) -> void:
 func _on_bullet_hit(area: Area2D, bullet: Area2D) -> void:
 	if area.get_parent() == _bugs_container:
 		_data.record_kill()
-		area.queue_free()
+		_spawn_hit_particles(area.global_position)
+		_kill_bug(area)
 		bullet.queue_free()
+
+
+## ===== 击杀视觉效果 =====
+
+func _spawn_hit_particles(global_pos: Vector2) -> void:
+	var local_pos: Vector2 = _arena.to_local(global_pos)
+	var particle_count: int = randi_range(6, 8)
+	for i: int in range(particle_count):
+		var p := ColorRect.new()
+		var p_size: float = randf_range(3.0, 6.0)
+		p.size = Vector2(p_size, p_size)
+		p.position = local_pos - Vector2(p_size / 2.0, p_size / 2.0)
+		# 基于虫子红色，随机亮度偏移
+		var brightness_offset: float = randf_range(-0.15, 0.15)
+		p.color = Color(
+			clampf(0.914 + brightness_offset, 0.0, 1.0),
+			clampf(0.271 + brightness_offset, 0.0, 1.0),
+			clampf(0.376 + brightness_offset, 0.0, 1.0),
+		)
+		_arena.add_child(p)
+
+		# 随机方向发射
+		var angle: float = randf() * TAU
+		var speed: float = randf_range(80.0, 180.0)
+		var velocity: Vector2 = Vector2(cos(angle), sin(angle)) * speed
+
+		var tween: Tween = p.create_tween()
+		tween.set_parallel(true)
+		tween.tween_property(p, "position", p.position + velocity * 0.3, 0.3)
+		tween.tween_property(p, "modulate:a", 0.0, 0.3)
+		tween.chain().tween_callback(p.queue_free)
+
+
+func _kill_bug(bug: Area2D) -> void:
+	# 从 bugs_container 移到 arena，防止继续被碰撞检测
+	var bug_pos: Vector2 = bug.position
+	var bug_scale: Vector2 = bug.scale
+	_bugs_container.remove_child(bug)
+	_arena.add_child(bug)
+	bug.position = bug_pos
+	bug.scale = bug_scale
+
+	# 禁用碰撞
+	bug.collision_layer = 0
+	bug.collision_mask = 0
+	for child: Node in bug.get_children():
+		if child is CollisionShape2D:
+			(child as CollisionShape2D).set_deferred("disabled", true)
+
+	# 死亡动画：闪白 → 渐隐+缩小
+	var tween: Tween = bug.create_tween()
+	# 闪白 0.05s
+	tween.tween_property(bug, "modulate", Color(3.0, 3.0, 3.0, 1.0), 0.05)
+	# 渐隐+缩小 0.2s
+	tween.set_parallel(true)
+	tween.tween_property(bug, "modulate", Color(1.0, 1.0, 1.0, 0.0), 0.2)
+	tween.tween_property(bug, "scale", bug_scale * 0.3, 0.2)
+	tween.set_parallel(false)
+	tween.tween_callback(bug.queue_free)
 
 
 func _on_player_hit() -> void:
