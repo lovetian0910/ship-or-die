@@ -1,14 +1,6 @@
 # config.gd — 数值配置常量集中管理
 extends Node
 
-## ===== 全局中文字体（Web 导出必须主动加载）=====
-const CJK_FONT_PATH: String = "res://assets/fonts/NotoSansSC-Regular.ttf"
-
-func _ready() -> void:
-	var font: FontFile = load(CJK_FONT_PATH) as FontFile
-	if font:
-		ThemeDB.get_project_theme().default_font = font
-
 ## ===== 时间系统（混合制：离散月份 + 实时小游戏）=====
 const TIME_TOTAL_MONTHS: int = 36               ## 总研发预算（月）
 const TIME_WARNING_THRESHOLD: float = 0.2       ## 剩余20%触发警告（≤7个月）
