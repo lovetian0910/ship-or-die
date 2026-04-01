@@ -11,8 +11,7 @@ var _event: EventData
 var _title_label: Label
 var _desc_label: Label
 var _benefit_label: Label
-var _accept_btn: Button
-var _reject_btn: Button
+var _confirm_btn: Button
 var _event_image: TextureRect
 
 
@@ -36,7 +35,7 @@ func setup(event_data: EventData) -> void:
 
 ## ===== 按钮回调 =====
 
-func _on_accept() -> void:
+func _on_confirm() -> void:
 	if _event == null:
 		return
 
@@ -47,11 +46,6 @@ func _on_accept() -> void:
 	}
 
 	event_resolved.emit(true, effects)
-	queue_free()
-
-
-func _on_reject() -> void:
-	event_resolved.emit(false, {})
 	queue_free()
 
 
@@ -125,47 +119,24 @@ func _build_ui() -> void:
 	_benefit_label.add_theme_color_override("font_color", Color("#4ecca3"))
 	vbox.add_child(_benefit_label)
 
-	# 按钮行
-	var btn_hbox := HBoxContainer.new()
-	btn_hbox.alignment = BoxContainer.ALIGNMENT_CENTER
-	btn_hbox.add_theme_constant_override("separation", 24)
-	vbox.add_child(btn_hbox)
+	# 确认按钮（居中）
+	_confirm_btn = Button.new()
+	_confirm_btn.text = "确认"
+	_confirm_btn.custom_minimum_size = Vector2(200, 44)
+	_confirm_btn.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
+	_confirm_btn.pressed.connect(_on_confirm)
+	vbox.add_child(_confirm_btn)
 
-	_accept_btn = Button.new()
-	_accept_btn.text = "接受"
-	_accept_btn.custom_minimum_size = Vector2(140, 44)
-	_accept_btn.pressed.connect(_on_accept)
-	btn_hbox.add_child(_accept_btn)
+	# 确认按钮样式
+	var confirm_style := StyleBoxFlat.new()
+	confirm_style.bg_color = Color("#4ecca3")
+	confirm_style.set_corner_radius_all(6)
+	confirm_style.set_content_margin_all(8)
+	_confirm_btn.add_theme_stylebox_override("normal", confirm_style)
+	_confirm_btn.add_theme_color_override("font_color", Color.BLACK)
 
-	# 接受按钮样式
-	var accept_style := StyleBoxFlat.new()
-	accept_style.bg_color = Color("#4ecca3")
-	accept_style.set_corner_radius_all(6)
-	accept_style.set_content_margin_all(8)
-	_accept_btn.add_theme_stylebox_override("normal", accept_style)
-	_accept_btn.add_theme_color_override("font_color", Color.BLACK)
-
-	var accept_hover := StyleBoxFlat.new()
-	accept_hover.bg_color = Color("#4ecca3").lightened(0.2)
-	accept_hover.set_corner_radius_all(6)
-	accept_hover.set_content_margin_all(8)
-	_accept_btn.add_theme_stylebox_override("hover", accept_hover)
-
-	_reject_btn = Button.new()
-	_reject_btn.text = "放弃"
-	_reject_btn.custom_minimum_size = Vector2(140, 44)
-	_reject_btn.pressed.connect(_on_reject)
-	btn_hbox.add_child(_reject_btn)
-
-	# 放弃按钮样式
-	var reject_style := StyleBoxFlat.new()
-	reject_style.bg_color = Color(0.3, 0.3, 0.3)
-	reject_style.set_corner_radius_all(6)
-	reject_style.set_content_margin_all(8)
-	_reject_btn.add_theme_stylebox_override("normal", reject_style)
-
-	var reject_hover := StyleBoxFlat.new()
-	reject_hover.bg_color = Color(0.4, 0.4, 0.4)
-	reject_hover.set_corner_radius_all(6)
-	reject_hover.set_content_margin_all(8)
-	_reject_btn.add_theme_stylebox_override("hover", reject_hover)
+	var confirm_hover := StyleBoxFlat.new()
+	confirm_hover.bg_color = Color("#4ecca3").lightened(0.2)
+	confirm_hover.set_corner_radius_all(6)
+	confirm_hover.set_content_margin_all(8)
+	_confirm_btn.add_theme_stylebox_override("hover", confirm_hover)

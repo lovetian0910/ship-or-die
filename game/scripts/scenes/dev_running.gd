@@ -219,7 +219,7 @@ func _on_cell_loading_finished(row: int, col: int) -> void:
 		FogMap.CellType.EMPTY:
 			_handle_empty_cell()
 		FogMap.CellType.SEARCH_EVENT:
-			_handle_search_event()
+			_handle_search_event(row, col)
 		FogMap.CellType.FIGHT_EVENT:
 			_handle_fight_event()
 		FogMap.CellType.TREASURE:
@@ -258,22 +258,30 @@ func _handle_empty_cell() -> void:
 	_add_log("%s 又是平淡的一个月（品质+%.1f）" % [AssetRegistry.emoji_bbcode("🏗️"), bonus])
 
 
-func _handle_search_event() -> void:
+func _handle_search_event(row: int, col: int) -> void:
 	var elapsed: int = TimeManager.elapsed_months
 	var event: EventData = event_scheduler.check_events(elapsed)
-	if event != null and event.event_type == EventData.EventType.SEARCH:
+	if event == null or event.event_type != EventData.EventType.SEARCH:
+		event = _find_any_search_event()
+	if event == null:
+		# fallback: 当成空地
+		var bonus: float = randf_range(1.0, 2.0)
+		quality_system.apply_boost(bonus)
+		_sync_quality_to_run_data()
+		_add_log("%s 探索了一番，发现了一些有用的东西（品质+%.1f）" % [AssetRegistry.emoji_bbcode("🔍"), bonus])
+		return
+
+	# 根据稀有度决定：高稀有度弹窗展示，低稀有度静默日志
+	var cell_rarity: FogMap.Rarity = fog_map.get_cell_rarity(row, col)
+	if cell_rarity >= Config.MAP_GLOW_RARITY_THRESHOLD:
+		# 稀有+史诗+传说：弹窗展示
 		_trigger_search_event(event)
 	else:
-		# 没有合适的搜类事件，尝试找任意搜类事件
-		event = _find_any_search_event()
-		if event != null:
-			_trigger_search_event(event)
-		else:
-			# fallback: 当成空地
-			var bonus: float = randf_range(1.0, 2.0)
-			quality_system.apply_boost(bonus)
-			_sync_quality_to_run_data()
-			_add_log("%s 探索了一番，发现了一些有用的东西（品质+%.1f）" % [AssetRegistry.emoji_bbcode("🔍"), bonus])
+		# 普通+优良：静默获得收益，只写日志
+		_apply_search_benefit(event)
+		_add_log("%s %s — %s" % [AssetRegistry.emoji_bbcode("🔍"), event.title, event.search_benefit_desc])
+		_sync_quality_to_run_data()
+		_update_ui()
 
 
 func _handle_fight_event() -> void:
@@ -569,29 +577,29 @@ func _on_search_resolved(accepted: bool, effects: Dictionary, popup: Control, ev
 	_enable_clickable_cells()
 
 	if accepted:
-		# 时间成本已在开格子时支付，事件不再额外扣时间
-		match event.search_benefit_type:
-			EventData.SearchBenefitType.QUALITY_CAP:
-				quality_system.cap += event.search_benefit_value
-				GameManager.run_data["quality_cap"] = quality_system.cap
-				_add_log("%s %s — 品质上限+%.0f" % [AssetRegistry.emoji_bbcode("✅"), event.title, event.search_benefit_value])
-			EventData.SearchBenefitType.DEV_SPEED:
-				var current_bonus: float = GameManager.run_data.get("speed_bonus", 0.0) as float
-				GameManager.run_data["speed_bonus"] = current_bonus + event.search_benefit_value
-				_add_log("%s %s — 研发效率+%.0f%%" % [AssetRegistry.emoji_bbcode("✅"), event.title, event.search_benefit_value * 100])
-			EventData.SearchBenefitType.QUALITY_FLAT:
-				quality_system.apply_boost(event.search_benefit_value)
-				_add_log("%s %s — 品质+%.0f" % [AssetRegistry.emoji_bbcode("✅"), event.title, event.search_benefit_value])
-			EventData.SearchBenefitType.ENERGY:
-				var current_energy: int = GameManager.run_data.get("bonus_energy", 0) as int
-				GameManager.run_data["bonus_energy"] = current_energy + int(event.search_benefit_value)
-				_add_log("%s %s — 精力+%d" % [AssetRegistry.emoji_bbcode("✅"), event.title, int(event.search_benefit_value)])
-
-		_sync_quality_to_run_data()
-	else:
-		_add_log("%s 放弃了：%s" % [AssetRegistry.emoji_bbcode("⏭️"), event.title])
-
+		_apply_search_benefit(event)
+	_sync_quality_to_run_data()
 	_update_ui()
+
+
+## 应用搜类事件收益（静默和弹窗共用）
+func _apply_search_benefit(event: EventData) -> void:
+	match event.search_benefit_type:
+		EventData.SearchBenefitType.QUALITY_CAP:
+			quality_system.cap += event.search_benefit_value
+			GameManager.run_data["quality_cap"] = quality_system.cap
+			_add_log("%s %s — 品质上限+%.0f" % [AssetRegistry.emoji_bbcode("✅"), event.title, event.search_benefit_value])
+		EventData.SearchBenefitType.DEV_SPEED:
+			var current_bonus: float = GameManager.run_data.get("speed_bonus", 0.0) as float
+			GameManager.run_data["speed_bonus"] = current_bonus + event.search_benefit_value
+			_add_log("%s %s — 研发效率+%.0f%%" % [AssetRegistry.emoji_bbcode("✅"), event.title, event.search_benefit_value * 100])
+		EventData.SearchBenefitType.QUALITY_FLAT:
+			quality_system.apply_boost(event.search_benefit_value)
+			_add_log("%s %s — 品质+%.0f" % [AssetRegistry.emoji_bbcode("✅"), event.title, event.search_benefit_value])
+		EventData.SearchBenefitType.ENERGY:
+			var current_energy: int = GameManager.run_data.get("bonus_energy", 0) as int
+			GameManager.run_data["bonus_energy"] = current_energy + int(event.search_benefit_value)
+			_add_log("%s %s — 精力+%d" % [AssetRegistry.emoji_bbcode("✅"), event.title, int(event.search_benefit_value)])
 
 
 func _trigger_fight_event(event: EventData) -> void:
