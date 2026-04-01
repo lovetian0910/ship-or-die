@@ -785,7 +785,11 @@ func _run_fog_map_test() -> void:
 	_assert(wall_count <= Config.MAP_WALL_MAX, "路障数≤%d: %d" % [Config.MAP_WALL_MAX, wall_count])
 	_assert(playtest_count == 1, "内测节点=1: %d" % playtest_count)
 	_assert(polish_count == 1, "打磨节点=1: %d" % polish_count)
-	_assert(exit_count >= 1, "上线出口≥1: %d" % exit_count)
+	_assert(exit_count == 1, "撤离点=1: %d" % exit_count)
+
+	# 撤离点开局可见：状态应为 FOGGY（不是 HIDDEN）
+	var exit_state: FogMap.CellState = fog_map.get_cell_state(fog_map.exit_pos.x, fog_map.exit_pos.y)
+	_assert(exit_state != FogMap.CellState.HIDDEN, "撤离点非HIDDEN（开局可见）: state=%d" % exit_state)
 
 	# 稀有度分配验证：非预放置的EMPTY格子应有稀有度分布
 	var rarity_counts: Dictionary = {}
@@ -933,15 +937,6 @@ func _run_fog_map_test() -> void:
 	# 撤离点位置记录
 	_log_section("迷雾地图 — 撤离点连通判定")
 	var path_map: FogMap = FogMapGenerator.generate(42)
-	# 生成器尚未设置 exit_pos，手动从格子类型中找到撤离点
-	if path_map.exit_pos == Vector2i(-1, -1):
-		for row: int in range(FogMap.MAP_SIZE):
-			for col: int in range(FogMap.MAP_SIZE):
-				if path_map.get_cell_type(row, col) == FogMap.CellType.EXIT:
-					path_map.exit_pos = Vector2i(row, col)
-					break
-			if path_map.exit_pos != Vector2i(-1, -1):
-				break
 	_assert(path_map.exit_pos != Vector2i(-1, -1), "撤离点位置已记录: %s" % str(path_map.exit_pos))
 	_assert(FogMap.manhattan_distance(path_map.start_pos, path_map.exit_pos) >= Config.MAP_EXIT_MIN_DISTANCE,
 		"撤离点距起点≥%d" % Config.MAP_EXIT_MIN_DISTANCE)

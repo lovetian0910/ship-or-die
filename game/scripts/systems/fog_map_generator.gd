@@ -41,20 +41,42 @@ static func generate(seed_val: int = -1) -> FogMap:
 	fog_map.mark_preplaced(polish_pos.x, polish_pos.y)
 	occupied.append(polish_pos)
 
-	# 上线出口：距起点较远（≥ MAP_EXIT_MIN_DISTANCE）
-	var exit_count: int = 3
-	for _i: int in range(exit_count):
-		var exit_pos: Vector2i = _find_distant_cell(fog_map, occupied, start, Config.MAP_EXIT_MIN_DISTANCE)
-		if exit_pos != Vector2i(-1, -1):
-			fog_map.set_cell(exit_pos.x, exit_pos.y, FogMap.CellType.EXIT)
-			fog_map.mark_preplaced(exit_pos.x, exit_pos.y)
-			occupied.append(exit_pos)
+	# 撤离点：固定1个，距起点较远（≥ MAP_EXIT_MIN_DISTANCE）
+	var exit_pos: Vector2i = _find_distant_cell(fog_map, occupied, start, Config.MAP_EXIT_MIN_DISTANCE)
+	if exit_pos != Vector2i(-1, -1):
+		fog_map.set_cell(exit_pos.x, exit_pos.y, FogMap.CellType.EXIT)
+		fog_map.mark_preplaced(exit_pos.x, exit_pos.y)
+		fog_map.exit_pos = exit_pos
+		occupied.append(exit_pos)
+	else:
+		# fallback：找最远的非占用格
+		var best_pos: Vector2i = Vector2i(-1, -1)
+		var best_dist: int = 0
+		for row: int in range(FogMap.MAP_SIZE):
+			for col_i: int in range(FogMap.MAP_SIZE):
+				var pos: Vector2i = Vector2i(row, col_i)
+				if pos not in occupied and fog_map.get_cell_type(row, col_i) != FogMap.CellType.WALL:
+					var dist: int = FogMap.manhattan_distance(pos, start)
+					if dist > best_dist:
+						best_dist = dist
+						best_pos = pos
+		if best_pos != Vector2i(-1, -1):
+			fog_map.set_cell(best_pos.x, best_pos.y, FogMap.CellType.EXIT)
+			fog_map.mark_preplaced(best_pos.x, best_pos.y)
+			fog_map.exit_pos = best_pos
+			occupied.append(best_pos)
 
 	# 4. 为剩余格子分配稀有度（类型延迟到揭开时决定）
 	_assign_rarities(fog_map, occupied)
 
 	# 5. 初始化起点
 	fog_map.init_start(start)
+
+	# 撤离点开局可见（FOGGY状态，穿透迷雾）
+	if Config.MAP_EXIT_ALWAYS_VISIBLE and fog_map.exit_pos != Vector2i(-1, -1):
+		var ep: Vector2i = fog_map.exit_pos
+		if fog_map.get_cell_state(ep.x, ep.y) == FogMap.CellState.HIDDEN:
+			fog_map.states[ep.x][ep.y] = FogMap.CellState.FOGGY
 
 	return fog_map
 
