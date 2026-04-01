@@ -23,7 +23,8 @@ var _loading_active: bool = false                ## 格子正在 loading 中
 var _cells_revealed_count: int = 0              ## 当前地图揭开格子计数（不含起点）
 var _fight_triggered_count: int = 0             ## 已触发小游戏次数
 var _exit_reached: bool = false                  ## 撤离点是否已连通
-var _last_minigame_type: String = ""            ## 上次小游戏类型（避免连续相同）
+var _fight_event_queue: Array[EventData] = []    ## 开局洗牌后的打类事件循环队列
+var _fight_event_index: int = 0                  ## 队列当前索引
 
 ## ===== 预加载弹窗场景 =====
 const PlaytestPopupScene: PackedScene = preload("res://scenes/popups/playtest_popup.tscn")
@@ -88,6 +89,9 @@ func _ready() -> void:
 
 	# 构建地图UI
 	_build_map_grid()
+
+	# 初始化打类事件循环队列（开局洗牌一次，按固定顺序循环）
+	_init_fight_event_queue()
 
 	# 绑定按钮
 	launch_button.pressed.connect(_on_launch_pressed)
@@ -288,7 +292,6 @@ func _handle_fight_event() -> void:
 	_fight_triggered_count += 1
 	var event: EventData = _pick_fight_event()
 	if event != null:
-		_last_minigame_type = _get_minigame_type(event)
 		_trigger_fight_event(event)
 	else:
 		quality_system.apply_penalty(2.0)
@@ -296,50 +299,13 @@ func _handle_fight_event() -> void:
 		_add_log("%s 遇到小麻烦，处理完了（品质-2.0）" % AssetRegistry.emoji_bbcode("⚠️"))
 
 
-## 统一选择打类事件，保证：首次必出 survivor、不连续同类型
+## 从预洗牌队列中取下一个打类事件（循环）
 func _pick_fight_event() -> EventData:
-	var elapsed: int = TimeManager.elapsed_months
-
-	# 首次强制 Bug Survivor
-	if _fight_triggered_count == 1:
-		var ev: EventData = _load_survivor_event()
-		if ev != null:
-			return ev
-
-	# 尝试从调度器获取
-	var candidates: Array[EventData] = []
-
-	var scheduled: EventData = event_scheduler.check_events(elapsed)
-	if scheduled != null and scheduled.event_type == EventData.EventType.FIGHT:
-		candidates.append(scheduled)
-
-	# 补充 fallback 候选（洗牌）
-	var fallback_paths: Array[String] = FALLBACK_FIGHT_EVENTS.duplicate()
-	fallback_paths.append_array(SURVIVOR_EVENTS)
-	fallback_paths.shuffle()
-	for path: String in fallback_paths:
-		var res: Resource = load(path)
-		if res is EventData:
-			var ev: EventData = res as EventData
-			# 去重：不重复已有候选
-			var already: bool = false
-			for c: EventData in candidates:
-				if c.event_id == ev.event_id:
-					already = true
-					break
-			if not already:
-				candidates.append(ev)
-
-	# 优先选不同类型的
-	for ev: EventData in candidates:
-		if _get_minigame_type(ev) != _last_minigame_type:
-			return ev
-
-	# 实在只有同类型，也得返回一个
-	if candidates.size() > 0:
-		return candidates[0]
-
-	return null
+	if _fight_event_queue.size() == 0:
+		return null
+	var event: EventData = _fight_event_queue[_fight_event_index]
+	_fight_event_index = (_fight_event_index + 1) % _fight_event_queue.size()
+	return event
 
 
 func _handle_treasure() -> void:
@@ -518,8 +484,8 @@ func _find_any_fight_event() -> EventData:
 	return null
 
 
-## 兜底：直接从资源目录加载一个打类事件（绕过调度器的冷却/预算限制）
-const FALLBACK_FIGHT_EVENTS: Array[String] = [
+## ===== 打类事件循环队列 =====
+const ALL_FIGHT_EVENT_PATHS: Array[String] = [
 	"res://resources/events/fight_tech_01.tres",
 	"res://resources/events/fight_tech_02.tres",
 	"res://resources/events/fight_team_01.tres",
@@ -529,33 +495,15 @@ const FALLBACK_FIGHT_EVENTS: Array[String] = [
 	"res://resources/events/fight_memory_01.tres",
 ]
 
-func _load_fallback_fight_event() -> EventData:
-	var path: String = FALLBACK_FIGHT_EVENTS[randi_range(0, FALLBACK_FIGHT_EVENTS.size() - 1)]
-	var res: Resource = load(path)
-	if res is EventData:
-		return res as EventData
-	return null
-
-
-## 加载一个 Bug Survivor 事件（首次打类事件优先触发）
-const SURVIVOR_EVENTS: Array[String] = [
-	"res://resources/events/fight_survivor_01.tres",
-	"res://resources/events/fight_survivor_02.tres",
-]
-
-func _load_survivor_event() -> EventData:
-	var path: String = SURVIVOR_EVENTS[randi_range(0, SURVIVOR_EVENTS.size() - 1)]
-	var res: Resource = load(path)
-	if res is EventData:
-		return res as EventData
-	return null
-
-
-## 获取事件的小游戏类型（空字符串表示 code_rescue）
-func _get_minigame_type(event: EventData) -> String:
-	if event.minigame_type != "":
-		return event.minigame_type
-	return "code_rescue"
+## 开局加载所有打类事件，洗牌一次，后续按固定顺序循环
+func _init_fight_event_queue() -> void:
+	_fight_event_queue.clear()
+	_fight_event_index = 0
+	for path: String in ALL_FIGHT_EVENT_PATHS:
+		var res: Resource = load(path)
+		if res is EventData:
+			_fight_event_queue.append(res as EventData)
+	_fight_event_queue.shuffle()
 
 
 ## ===== 随机事件触发（复用原有逻辑）=====
