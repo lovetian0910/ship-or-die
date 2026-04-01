@@ -92,6 +92,7 @@ const START_EMOJI: String = "🏆"
 
 ## 是否为起点
 var is_start: bool = false
+var _legendary_pulse_played: bool = false
 
 ## 进度环参数
 const RING_RADIUS: float = 20.0          ## 圆环半径
@@ -219,8 +220,9 @@ func _show_revealed() -> void:
 	glow_rect.color = Color(0, 0, 0, 0)
 	disabled = true
 	mouse_default_cursor_shape = Control.CURSOR_ARROW
-	# 传说级揭示脉冲动画
-	if rarity == FogMap.Rarity.LEGENDARY and not is_start:
+	# 传说级揭示脉冲动画（只播一次）
+	if rarity == FogMap.Rarity.LEGENDARY and not is_start and not _legendary_pulse_played:
+		_legendary_pulse_played = true
 		_play_legendary_reveal()
 
 
