@@ -39,14 +39,8 @@ func setup(
 	bug_penalty: float,
 	bug_fix_months: int,
 	grade_name: String,
-	is_revealed: bool,
 	remaining_months: int
 ) -> void:
-	var verified_text: String = "（已验证）" if is_revealed else "（未验证，可能有偏差）"
-	var warning_text: String = ""
-	if not is_revealed:
-		warning_text = "\n\n[color=gray]提示：你没有做内测验证，当前品质等级可能不准确。[/color]"
-
 	var remaining_years: int = remaining_months / 12
 	var remaining_m: int = remaining_months % 12
 	var time_str: String = ""
@@ -57,10 +51,10 @@ func setup(
 
 	desc_label.text = (
 		"是否进行最终打磨？\n\n"
-		+ "当前品质：[b]%s[/b] %s\n"
+		+ "当前品质：[b]%s[/b]\n"
 		+ "剩余时间：[b]%s[/b]\n\n"
-		+ "花费 [b]%d个月[/b] 进行打磨。%s"
-	) % [grade_name, verified_text, time_str, month_cost, warning_text]
+		+ "花费 [b]%d个月[/b] 进行打磨。"
+	) % [grade_name, time_str, month_cost]
 
 	odds_label.text = "%d%%：品质+%.0f  |  %d%%：发现严重bug" % [
 		int(success_chance * 100.0),

@@ -235,7 +235,7 @@ func _simulate_one_run(strategy: Strategy, seed_val: int) -> Dictionary:
 	GameManager.run_data["quality"] = qs.raw_score
 	GameManager.run_data["quality_cap"] = qs.cap
 	GameManager.run_data["did_playtest"] = did_playtest
-	GameManager.run_data["quality_revealed"] = qs.revealed
+	GameManager.run_data["competitor_revealed"] = did_playtest
 	GameManager.run_data["did_polish"] = did_polish
 
 	# --- 4. 判断是否超时 ---

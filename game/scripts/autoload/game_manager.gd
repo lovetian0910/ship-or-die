@@ -129,7 +129,7 @@ func start_new_run() -> void:
 		"quality_cap": 0.0,
 		"dev_phase": "early",
 		"did_playtest": false,
-		"quality_revealed": false,
+		"competitor_revealed": false,
 		"did_polish": false,
 	}
 	EventBus.run_started.emit()

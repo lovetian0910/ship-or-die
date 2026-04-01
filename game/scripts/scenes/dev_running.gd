@@ -34,9 +34,10 @@ const FightEventPopupScene: PackedScene = preload("res://scenes/popups/fight_eve
 const MapCellScene: PackedScene = preload("res://scenes/ui/map_cell.tscn")
 
 ## ===== UI 引用 =====
-@onready var quality_grade_label: Label = %QualityGradeLabel
+@onready var quality_score_label: Label = %QualityScoreLabel
+@onready var quality_progress_bar: ProgressBar = %QualityProgressBar
+@onready var quality_grade_name: Label = %QualityGradeName
 @onready var explore_label: Label = %ExploreLabel
-@onready var quality_hint: Label = %QualityHint
 @onready var event_log: VBoxContainer = %EventLog
 @onready var launch_button: Button = %LaunchButton
 @onready var popup_layer: CanvasLayer = %PopupLayer
@@ -48,6 +49,12 @@ const MapCellScene: PackedScene = preload("res://scenes/ui/map_cell.tscn")
 @onready var market_heat_label: Label = %MarketHeatLabel
 @onready var competitor_summary: Label = %CompetitorSummary
 @onready var toast_label: Label = %ToastLabel
+
+## ===== 市场份额预估 UI 引用 =====
+@onready var share_now_value: Label = %ShareNowValue
+@onready var share_future_value: Label = %ShareFutureValue
+@onready var share_progress_bar: ProgressBar = %ShareProgressBar
+@onready var share_hint: Label = %ShareHint
 
 ## ===== 格子UI引用 =====
 var _cell_nodes: Array = []  # [row][col] = MapCell Button
@@ -71,13 +78,13 @@ func _ready() -> void:
 	else:
 		GameManager.run_data["quality_cap"] = quality_system.cap
 
-	# 恢复内测状态
-	if GameManager.run_data.get("quality_revealed", false) as bool:
-		quality_system.revealed = true
-
 	# 恢复可选节点触发状态
 	_playtest_triggered = GameManager.run_data.get("did_playtest", false) as bool
 	_polish_triggered = GameManager.run_data.get("did_polish", false) as bool
+
+	# 恢复竞品品质揭示状态
+	if GameManager.run_data.get("competitor_revealed", false) as bool:
+		AICompetitors.qualities_revealed = true
 
 	# 初始化事件调度器
 	event_scheduler = EventScheduler.new()
@@ -328,7 +335,7 @@ func _handle_treasure() -> void:
 
 func _handle_playtest() -> void:
 	if _playtest_triggered:
-		_add_log("%s 内测设备还在，但已经用过了" % AssetRegistry.emoji_bbcode("🔬"))
+		_add_log("%s 展会邀请还在，但已经去过了" % AssetRegistry.emoji_bbcode("🎪"))
 		return
 	_playtest_triggered = true
 	_trigger_playtest()
@@ -624,16 +631,16 @@ func _trigger_playtest() -> void:
 
 func _on_playtest_accepted(popup: Control) -> void:
 	var still_alive: bool = TimeManager.consume_months(Config.PLAYTEST_MONTH_COST)
-	quality_system.reveal()
+	AICompetitors.reveal_qualities()
 	GameManager.run_data["did_playtest"] = true
-	GameManager.run_data["quality_revealed"] = true
+	GameManager.run_data["competitor_revealed"] = true
 	_sync_quality_to_run_data()
-	EventBus.quality_revealed.emit(quality_system.raw_score, quality_system.get_true_grade_name())
-	_add_log("%s 内测完成 — 真实品质：[color=cyan]%s[/color]" % [AssetRegistry.emoji_bbcode("🔬"), quality_system.get_display_grade_name()])
+	_add_log("%s 游戏展参展完成 — 竞品品质已揭示！" % AssetRegistry.emoji_bbcode("🎪"))
 
 	popup.queue_free()
 	_popup_active = false
 	_enable_clickable_cells()
+	_refresh_competitor_panel()
 	_update_ui()
 
 	if not still_alive:
@@ -642,7 +649,7 @@ func _on_playtest_accepted(popup: Control) -> void:
 
 
 func _on_playtest_skipped(popup: Control) -> void:
-	_add_log("%s 跳过了内测验证" % AssetRegistry.emoji_bbcode("⏭️"))
+	_add_log("%s 跳过了游戏展" % AssetRegistry.emoji_bbcode("⏭️"))
 	popup.queue_free()
 	_popup_active = false
 	_enable_clickable_cells()
@@ -663,7 +670,6 @@ func _trigger_polish() -> void:
 		Config.POLISH_FAIL_PENALTY,
 		Config.POLISH_BUG_FIX_MONTHS,
 		quality_system.get_display_grade_name(),
-		quality_system.revealed,
 		TimeManager.get_remaining()
 	)
 	popup.accepted.connect(_on_polish_accepted.bind(popup))
@@ -777,13 +783,23 @@ func _update_ui() -> void:
 	# 探索格数（时间/阶段由持久化顶栏 TimeBar 显示）
 	explore_label.text = "已探索 %d 格" % fog_map.revealed_count
 
+	# 品质数值化显示
+	quality_score_label.text = "%.1f / %.0f" % [quality_system.raw_score, quality_system.cap]
+	quality_progress_bar.max_value = quality_system.cap
+	quality_progress_bar.value = quality_system.raw_score
 	var grade_name: String = quality_system.get_display_grade_name()
-	if quality_system.revealed:
-		quality_grade_label.text = "%s（已验证）" % grade_name
-		quality_hint.text = "品质已通过内测验证"
-	else:
-		quality_grade_label.text = "%s（未验证）" % grade_name
-		quality_hint.text = "品质评估可能存在偏差"
+	quality_grade_name.text = grade_name
+	# 等级颜色：粗糙=灰, 合格=绿, 精良=蓝, 杰作=金
+	var grade: QualitySystem.Grade = quality_system.get_true_grade()
+	match grade:
+		QualitySystem.Grade.ROUGH:
+			quality_grade_name.add_theme_color_override("font_color", Color(0.5, 0.5, 0.5))
+		QualitySystem.Grade.ACCEPTABLE:
+			quality_grade_name.add_theme_color_override("font_color", Color(0.3, 0.8, 0.3))
+		QualitySystem.Grade.EXCELLENT:
+			quality_grade_name.add_theme_color_override("font_color", Color(0.4, 0.7, 1.0))
+		QualitySystem.Grade.MASTERPIECE:
+			quality_grade_name.add_theme_color_override("font_color", Color(1.0, 0.85, 0.2))
 
 	# 底部提示
 	if TimeManager.is_active:
@@ -802,6 +818,82 @@ func _update_ui() -> void:
 
 	# 刷新竞争态势栏
 	_refresh_competitor_panel()
+
+	# 刷新市场份额预估
+	_refresh_market_share()
+
+
+## ===== 市场份额预估刷新 =====
+func _refresh_market_share() -> void:
+	var my_quality: float = quality_system.raw_score
+	var competitors: Array[AICompetitorData] = AICompetitors.get_competitors()
+
+	# --- 现在上线份额：只算已上线竞品 ---
+	var launched_q: float = 0.0
+	var launched_count: int = 0
+	for comp: AICompetitorData in competitors:
+		if comp.launched:
+			launched_q += comp.quality
+			launched_count += 1
+
+	var now_total: float = my_quality + launched_q
+	var now_ratio: float = 1.0
+	if launched_count > 0 and now_total > 0.0:
+		now_ratio = my_quality / now_total
+
+	var now_pct: float = now_ratio * 100.0
+	share_now_value.text = "%.0f%%" % now_pct
+	share_progress_bar.value = now_pct
+
+	# 现在份额颜色
+	if now_pct >= 60.0:
+		share_now_value.add_theme_color_override("font_color", Color(0.3, 0.9, 0.4))
+	elif now_pct >= 30.0:
+		share_now_value.add_theme_color_override("font_color", Color(0.9, 0.8, 0.2))
+	else:
+		share_now_value.add_theme_color_override("font_color", Color(0.9, 0.3, 0.2))
+
+	# --- 竞品全部入场后份额：算所有竞品 ---
+	var all_comp_q: float = 0.0
+	var revealed: bool = AICompetitors.qualities_revealed
+	for comp: AICompetitorData in competitors:
+		all_comp_q += comp.quality
+
+	var future_total: float = my_quality + all_comp_q
+	var future_ratio: float = 1.0
+	if competitors.size() > 0 and future_total > 0.0:
+		future_ratio = my_quality / future_total
+	var future_pct: float = future_ratio * 100.0
+
+	if revealed:
+		# 参展后：显示精确数字
+		share_future_value.text = "≈%.0f%%" % future_pct
+	else:
+		# 未参展：显示模糊范围（±15%波动）
+		var low: float = maxf(future_pct - 15.0, 0.0)
+		var high: float = minf(future_pct + 15.0, 100.0)
+		share_future_value.text = "≈%.0f%%~%.0f%%" % [low, high]
+
+	# 未来份额颜色
+	if future_pct >= 60.0:
+		share_future_value.add_theme_color_override("font_color", Color(0.3, 0.9, 0.4))
+	elif future_pct >= 30.0:
+		share_future_value.add_theme_color_override("font_color", Color(0.9, 0.6, 0.2))
+	else:
+		share_future_value.add_theme_color_override("font_color", Color(0.9, 0.3, 0.2))
+
+	# --- 提示文字 ---
+	var all_launched: bool = launched_count >= competitors.size()
+	if competitors.size() == 0:
+		share_hint.text = "暂无竞品，你独占市场"
+	elif all_launched:
+		share_hint.text = "所有竞品已上线，当前份额即最终份额"
+	elif now_pct > future_pct + 10.0:
+		share_hint.text = "独占是暂时的，后续竞品入场份额会下降"
+	elif future_pct >= 50.0:
+		share_hint.text = "品质领先，即使竞品入场也能保持优势"
+	else:
+		share_hint.text = "提升品质可在竞品入场后保住更多份额"
 
 
 ## ===== 事件日志 =====

@@ -1,5 +1,5 @@
 # quality_system.gd — 品质系统（RefCounted，每局一个实例）
-# 职责：品质积累、模糊等级映射、内测揭示、打磨增减
+# 职责：品质积累、等级映射、打磨增减
 class_name QualitySystem
 extends RefCounted
 
@@ -21,12 +21,6 @@ var cap: float = 40.0
 ## 每月品质增长 = QUALITY_PER_MONTH * 外包效率倍率
 var rate_per_month: float = 1.5
 
-## 是否已做内测（揭示真实值）
-var revealed: bool = false
-
-## 模糊偏移量（局开始时固定，-10 ~ +10）
-var _boundary_offset: float = 0.0
-
 
 func _init(creator_level: int, outsource_level: int) -> void:
 	# 品质上限：由主创等级决定
@@ -38,9 +32,6 @@ func _init(creator_level: int, outsource_level: int) -> void:
 	var speed_mult: float = Config.OUTSOURCE_SPEED.get(outsource_level, 1.0)
 	rate_per_month = base_rate * speed_mult
 
-	# 模糊偏移：局开始时固定
-	_boundary_offset = randf_range(-10.0, 10.0)
-
 
 ## 品质积累：每消耗N月，品质增加 rate_per_month * N
 func accumulate(months: int) -> void:
@@ -49,21 +40,14 @@ func accumulate(months: int) -> void:
 	raw_score = minf(raw_score + rate_per_month * float(months), cap)
 
 
-## 内部真实等级
+## 获取真实等级
 func get_true_grade() -> Grade:
 	return _score_to_grade(raw_score)
 
 
-## 玩家看到的模糊等级（内测后显示真实等级）
-func get_fuzzy_grade() -> Grade:
-	if revealed:
-		return get_true_grade()
-	return _score_to_grade(raw_score + _boundary_offset)
-
-
-## 获取玩家可见的等级名称
+## 获取玩家可见的等级名称（直接返回真实等级）
 func get_display_grade_name() -> String:
-	var grade: Grade = get_fuzzy_grade()
+	var grade: Grade = get_true_grade()
 	return GRADE_NAMES[grade]
 
 
@@ -71,11 +55,6 @@ func get_display_grade_name() -> String:
 func get_true_grade_name() -> String:
 	var grade: Grade = get_true_grade()
 	return GRADE_NAMES[grade]
-
-
-## 内测揭示：锁定为真实值
-func reveal() -> void:
-	revealed = true
 
 
 ## 打磨成功：品质提升

@@ -1,4 +1,4 @@
-# playtest_popup.gd — 内测验证弹窗
+# playtest_popup.gd — 游戏展弹窗（揭示竞品品质）
 extends PanelContainer
 
 signal accepted()
@@ -17,12 +17,11 @@ func _ready() -> void:
 
 func setup(month_cost: int, current_grade_name: String, remaining_months: int) -> void:
 	desc_label.text = (
-		"是否进行内测验证？\n\n"
-		+ "花费 [b]%d个月[/b] 进行内测，揭示真实品质等级。\n\n"
-		+ "当前品质评估：[b]%s[/b]（可能有偏差）\n\n"
-		+ "内测将揭示 [color=yellow]真实品质等级[/color]，"
-		+ "帮助你做出更准确的上线决策。"
-	) % [month_cost, current_grade_name]
+		"是否参加游戏展？\n\n"
+		+ "花费 [b]%d个月[/b] 带队参展，实地考察同行作品。\n\n"
+		+ "参展后将揭示所有竞品的 [color=yellow]真实品质等级[/color]，\n"
+		+ "帮助你更准确地判断市场竞争格局。"
+	) % [month_cost]
 
 	cost_label.text = "消耗时间：%d个月 | 剩余：%d个月" % [month_cost, remaining_months]
 

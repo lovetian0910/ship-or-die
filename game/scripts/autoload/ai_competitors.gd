@@ -46,6 +46,9 @@ var _total_months: int = 0
 var _last_checked_month: int = -1
 var _initialized: bool = false
 
+## 竞品品质是否已揭示（通过情报侦察）
+var qualities_revealed: bool = false
+
 
 func _ready() -> void:
 	EventBus.time_tick.connect(_on_time_tick)
@@ -92,6 +95,7 @@ func reset() -> void:
 	_competitors.clear()
 	_initialized = false
 	_last_checked_month = -1
+	qualities_revealed = false
 
 
 ## ===== 获取竞品列表 =====
@@ -116,8 +120,17 @@ func get_personality_hint(personality: AICompetitorData.Personality) -> String:
 	return "情报不明"
 
 
-## ===== 模糊品质感知（加随机偏差）=====
+## ===== 情报侦察：揭示竞品品质 =====
+func reveal_qualities() -> void:
+	qualities_revealed = true
+
+
+## ===== 模糊品质感知（揭示后显示精确值）=====
 func get_fuzzy_quality_text(quality: float) -> String:
+	if qualities_revealed:
+		# 揭示后显示精确品质分和等级
+		var grade_name: String = _quality_to_grade_name(quality)
+		return "品质：%.1f / %s" % [quality, grade_name]
 	var perceived: float = quality + randf_range(-10.0, 10.0)
 	if perceived >= 70.0:
 		return "可能是精品"
@@ -127,6 +140,18 @@ func get_fuzzy_quality_text(quality: float) -> String:
 		return "品质一般"
 	else:
 		return "品质不高"
+
+
+## 品质分转等级名称（内部工具函数）
+func _quality_to_grade_name(quality: float) -> String:
+	if quality >= 75.0:
+		return "杰作"
+	elif quality >= 50.0:
+		return "精良"
+	elif quality >= 25.0:
+		return "合格"
+	else:
+		return "粗糙"
 
 
 ## ===== 获取已上线竞品数 =====

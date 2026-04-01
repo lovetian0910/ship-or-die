@@ -260,10 +260,10 @@ func _run_dev_running_test() -> void:
 	TimeManager.consume_months(6)
 	_assert(TimeManager.get_dev_phase() == &"mid", "阶段 = mid (progress=%.2f)" % TimeManager.get_progress())
 
-	# 模拟内测验证
+	# 模拟参加游戏展
 	GameManager.run_data["did_playtest"] = true
-	GameManager.run_data["quality_revealed"] = true
-	_log_info("执行内测验证，品质已揭示")
+	GameManager.run_data["competitor_revealed"] = true
+	_log_info("参加游戏展，竞品品质已揭示")
 
 	# 消耗到后期（需要 progress > 0.7，即 elapsed > 25 月，当前已消耗 12，还需 14）
 	TimeManager.consume_months(14)
@@ -625,7 +625,6 @@ func _run_quality_system_test() -> void:
 	var qs := QualitySystem.new(2, 2)  # 中级主创+中级外包
 	_assert(qs.cap == Config.QUALITY_CAP.get(2, 70.0), "品质上限 = %.0f" % qs.cap)
 	_assert(qs.raw_score == 0.0, "初始品质 = 0")
-	_assert(not qs.revealed, "初始未揭示")
 
 	# 积累
 	qs.accumulate(6)
@@ -635,15 +634,13 @@ func _run_quality_system_test() -> void:
 	qs.accumulate(100)
 	_assert(qs.raw_score <= qs.cap, "品质不超上限: %.1f <= %.1f" % [qs.raw_score, qs.cap])
 
-	# 模糊等级
-	var fuzzy: String = qs.get_display_grade_name()
-	_assert(fuzzy != "", "模糊等级非空: %s" % fuzzy)
+	# 等级名称
+	var grade: String = qs.get_display_grade_name()
+	_assert(grade != "", "等级名称非空: %s" % grade)
 
-	# 揭示
-	qs.reveal()
-	_assert(qs.revealed, "揭示后 revealed = true")
+	# 真实等级名称（应与 display 一致）
 	var true_grade: String = qs.get_true_grade_name()
-	_assert(true_grade != "", "真实等级非空: %s" % true_grade)
+	_assert(true_grade == grade, "display与true等级一致: %s == %s" % [grade, true_grade])
 
 	# 打磨提升（先降低品质确保不在上限）
 	qs.raw_score = 50.0
