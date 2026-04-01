@@ -211,7 +211,8 @@ func _show_revealed() -> void:
 		bg_rect.color = COLOR_START
 		_show_icon_texture(START_EMOJI, "★")
 	else:
-		bg_rect.color = _get_type_color()
+		# 背景色用稀有度颜色（揭示时的"开箱"闪变）
+		bg_rect.color = _get_rarity_reveal_color()
 		var emoji: String = TYPE_ICON_EMOJI.get(cell_type, "") as String
 		var fallback: String = TYPE_ICONS_FALLBACK.get(cell_type, "") as String
 		_show_icon_texture(emoji, fallback)
@@ -397,6 +398,26 @@ func _get_rarity_glow_color() -> Color:
 		return Color(Config.MAP_GLOW_COLOR.r, Config.MAP_GLOW_COLOR.g, Config.MAP_GLOW_COLOR.b, Config.MAP_GLOW_ALPHA)
 	else:
 		return Color(0, 0, 0, 0)
+
+
+## 揭示时的背景色：稀有度颜色（预放置特殊格子用类型颜色）
+func _get_rarity_reveal_color() -> Color:
+	# 预放置特殊格子保持类型颜色
+	match cell_type:
+		FogMap.CellType.WALL:
+			return COLOR_WALL
+		FogMap.CellType.PLAYTEST:
+			return COLOR_PLAYTEST
+		FogMap.CellType.POLISH:
+			return COLOR_POLISH
+		FogMap.CellType.EXIT:
+			return COLOR_EXIT
+	# 普通格子用稀有度颜色
+	var rarity_name: String = FogMap.RARITY_NAMES[rarity]
+	var level_data: Dictionary = Config.RARITY_LEVELS.get(rarity_name, {})
+	var base_color: Color = level_data.get("color", Color(0.5, 0.5, 0.5)) as Color
+	# 稍微压暗作为背景（不刺眼）
+	return base_color.darkened(0.3)
 
 
 func _get_type_color() -> Color:
