@@ -6,7 +6,7 @@ extends Control
 
 func _ready() -> void:
 	start_button.pressed.connect(_on_start_pressed)
-	_add_test_button()
+	#_add_test_button()  # 测试入口，发布时隐藏
 	_setup_background()
 
 
