@@ -886,8 +886,15 @@ func _run_fog_map_test() -> void:
 		var sim_clickable: Array[Vector2i] = sim_map.get_clickable_cells()
 		if sim_clickable.size() == 0:
 			break
+		# 过滤掉EXIT类型（不可直接点击）
+		var valid_sim: Array[Vector2i] = []
+		for c: Vector2i in sim_clickable:
+			if sim_map.get_cell_type(c.x, c.y) != FogMap.CellType.EXIT:
+				valid_sim.append(c)
+		if valid_sim.size() == 0:
+			break
 		# 随机选一个格子
-		var pick: Vector2i = sim_clickable[randi_range(0, sim_clickable.size() - 1)]
+		var pick: Vector2i = valid_sim[randi_range(0, valid_sim.size() - 1)]
 		# 按稀有度计算月数消耗
 		var pick_rarity: FogMap.Rarity = sim_map.get_cell_rarity(pick.x, pick.y)
 		var rarity_name: String = FogMap.RARITY_NAMES[pick_rarity]
@@ -898,7 +905,7 @@ func _run_fog_map_test() -> void:
 		if cell_result != null:
 			months_left -= cost
 			cells_explored += 1
-			if cell_result as FogMap.CellType == FogMap.CellType.EXIT:
+			if sim_map.check_path_connected():
 				found_exit = true
 
 	var coverage: float = float(cells_explored) / float(FogMap.MAP_SIZE * FogMap.MAP_SIZE)
@@ -906,33 +913,36 @@ func _run_fog_map_test() -> void:
 	_assert(cells_explored >= 2, "至少探索2格: %d" % cells_explored)
 	_assert(coverage < 0.8, "覆盖率<80%%（有策略取舍空间）: %.0f%%" % (coverage * 100))
 
-	# 多次模拟检查出口可达性
-	var exit_reachable_count: int = 0
+	# 多次模拟检查撤离点连通性（定向寻路 vs 随机探索）
+	var exit_connected_count: int = 0
 	for sim_i: int in range(10):
 		var test_map: FogMap = FogMapGenerator.generate(sim_i * 7 + 1)
 		var m_left: int = 36
-		var e_found: bool = false
 		while m_left > 0:
 			var sc: Array[Vector2i] = test_map.get_clickable_cells()
 			if sc.size() == 0:
 				break
-			var p: Vector2i = sc[randi_range(0, sc.size() - 1)]
+			# 过滤掉EXIT类型的格子（不可直接点击）
+			var valid_cells: Array[Vector2i] = []
+			for c: Vector2i in sc:
+				if test_map.get_cell_type(c.x, c.y) != FogMap.CellType.EXIT:
+					valid_cells.append(c)
+			if valid_cells.size() == 0:
+				break
+			var p: Vector2i = valid_cells[randi_range(0, valid_cells.size() - 1)]
 			var p_rarity: FogMap.Rarity = test_map.get_cell_rarity(p.x, p.y)
 			var p_rarity_name: String = FogMap.RARITY_NAMES[p_rarity]
 			var p_cost: int = Config.RARITY_MONTH_COST.get(p_rarity_name, 1) as int
 			if m_left < p_cost:
 				break
-			var cr: Variant = test_map.reveal_cell(p.x, p.y)
-			if cr != null:
-				m_left -= p_cost
-				if cr as FogMap.CellType == FogMap.CellType.EXIT:
-					e_found = true
-					break
-		if e_found:
-			exit_reachable_count += 1
+			test_map.reveal_cell(p.x, p.y)
+			m_left -= p_cost
+			if test_map.check_path_connected():
+				exit_connected_count += 1
+				break
 
-	_log_info("10次随机模拟中找到出口: %d/10" % exit_reachable_count)
-	_assert(exit_reachable_count >= 1, "至少10%%的随机模拟能找到出口（稀有度消耗下随机走法较难）: %d/10" % exit_reachable_count)
+	_log_info("10次随机模拟中连通撤离点: %d/10" % exit_connected_count)
+	_assert(exit_connected_count >= 1, "至少10%%的随机模拟能连通撤离点: %d/10" % exit_connected_count)
 
 	# 撤离点位置记录
 	_log_section("迷雾地图 — 撤离点连通判定")
