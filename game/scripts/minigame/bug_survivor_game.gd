@@ -37,6 +37,7 @@ var _spawn_timer: float = 0.0
 var _shoot_timer: float = 0.0
 var _arena_size: Vector2
 var _arena_offset: Vector2
+var _last_shoot_dir: Vector2 = Vector2.RIGHT  ## 上次射击方向（玩家静止时朝向用）
 
 
 func _ready() -> void:
@@ -130,6 +131,10 @@ func _move_player(delta: float) -> void:
 				_player_sprite.flip_h = true
 			elif dir.x > 0:
 				_player_sprite.flip_h = false
+	else:
+		# 没有移动输入时，朝向最近的攻击目标
+		if _player_sprite and _last_shoot_dir.x != 0.0:
+			_player_sprite.flip_h = _last_shoot_dir.x < 0.0
 
 	var speed: float = _preset.get_player_speed()
 	_player.position += dir * speed * delta
@@ -158,6 +163,7 @@ func _shoot_nearest_bug() -> void:
 		return
 
 	var direction: Vector2 = (_player.position.direction_to(nearest.position)).normalized()
+	_last_shoot_dir = direction
 
 	var bullet := Area2D.new()
 	bullet.position = _player.position
