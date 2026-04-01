@@ -89,14 +89,6 @@ const TYPE_ICONS_FALLBACK: Dictionary = {
 ## 起点图标
 const START_EMOJI: String = "🏆"
 
-## 稀有度标记符号（迷雾状态显示在 ? 旁边）
-const RARITY_MARKS: Dictionary = {
-	FogMap.Rarity.COMMON: "",
-	FogMap.Rarity.UNCOMMON: "+",
-	FogMap.Rarity.RARE: "★",
-	FogMap.Rarity.EPIC: "♦",
-	FogMap.Rarity.LEGENDARY: "♛",
-}
 
 ## 是否为起点
 var is_start: bool = false
@@ -204,6 +196,14 @@ func _show_foggy() -> void:
 	# 启动问号晃动动画
 	_start_wobble()
 
+	# 撤离点特殊显示：穿透迷雾，显示橙色边框和图标
+	if cell_type == FogMap.CellType.EXIT:
+		_show_icon_texture("🚀", "=>")
+		glow_rect.color = Color(Config.MAP_EXIT_BORDER_COLOR.r, Config.MAP_EXIT_BORDER_COLOR.g, Config.MAP_EXIT_BORDER_COLOR.b, 0.5)
+		# 撤离点不可直接点击（需要连通路径）
+		disabled = true
+		mouse_default_cursor_shape = Control.CURSOR_ARROW
+
 
 func _show_revealed() -> void:
 	_stop_wobble()
@@ -218,6 +218,9 @@ func _show_revealed() -> void:
 	glow_rect.color = Color(0, 0, 0, 0)
 	disabled = true
 	mouse_default_cursor_shape = Control.CURSOR_ARROW
+	# 传说级揭示脉冲动画
+	if rarity == FogMap.Rarity.LEGENDARY and not is_start:
+		_play_legendary_reveal()
 
 
 ## 尝试显示图标图片，失败则显示文字 fallback
@@ -267,7 +270,7 @@ func start_loading() -> void:
 	var rarity_name: String = FogMap.RARITY_NAMES[rarity]
 	_loading_duration = Config.RARITY_LOADING_DURATION.get(rarity_name, 0.5) as float
 	var level_data: Dictionary = Config.RARITY_LEVELS.get(rarity_name, {})
-	_loading_color = level_data.get("color", Color(0.7, 0.7, 0.7)) as Color
+	_loading_color = Color.WHITE
 	_loading_progress = 0.0
 	_loading_month_cost = Config.RARITY_MONTH_COST.get(rarity_name, 1) as int
 	_loading_months_consumed = 0
@@ -352,6 +355,7 @@ func _on_loading_complete() -> void:
 	_stop_breath_pulse()
 	if _draw_layer:
 		_draw_layer.queue_redraw()
+	# 揭示动画：颜色闪变（在 cell_loading_finished 之前，让 dev_running 处理后再更新视觉）
 	cell_loading_finished.emit(row, col)
 
 
@@ -386,25 +390,13 @@ func _draw_arc_on(target: Control, center: Vector2, radius: float, angle_from: f
 
 ## ===== 稀有度颜色 =====
 
-## 获取稀有度对应的光晕颜色
+## 获取稀有度对应的光晕颜色（2档制：暗/亮）
 func _get_rarity_glow_color() -> Color:
-	var rarity_name: String = FogMap.RARITY_NAMES[rarity]
-	var level_data: Dictionary = Config.RARITY_LEVELS.get(rarity_name, {})
-	var base_color: Color = level_data.get("color", Color(0.5, 0.5, 0.5)) as Color
-	# 稀有度越高光晕越亮
-	var alpha: float = 0.08
-	match rarity:
-		FogMap.Rarity.COMMON:
-			alpha = 0.08
-		FogMap.Rarity.UNCOMMON:
-			alpha = 0.15
-		FogMap.Rarity.RARE:
-			alpha = 0.22
-		FogMap.Rarity.EPIC:
-			alpha = 0.30
-		FogMap.Rarity.LEGENDARY:
-			alpha = 0.40
-	return Color(base_color.r, base_color.g, base_color.b, alpha)
+	# 稀有度 >= RARE 显示统一暖白微光，否则无光晕
+	if rarity >= Config.MAP_GLOW_RARITY_THRESHOLD:
+		return Color(Config.MAP_GLOW_COLOR.r, Config.MAP_GLOW_COLOR.g, Config.MAP_GLOW_COLOR.b, Config.MAP_GLOW_ALPHA)
+	else:
+		return Color(0, 0, 0, 0)
 
 
 func _get_type_color() -> Color:
@@ -478,9 +470,8 @@ func _start_breath_pulse() -> void:
 	_stop_breath_pulse()
 	_breath_base_color = bg_rect.color
 	var bright_color: Color = _breath_base_color.lightened(BREATH_BRIGHT)
-	# 叠加一点稀有度颜色
-	var rarity_tint: Color = _loading_color
-	bright_color = bright_color.lerp(rarity_tint, 0.3)
+	# 呼吸脉冲使用纯白色提亮，不泄露稀有度
+	bright_color = bright_color.lerp(Color.WHITE, 0.15)
 
 	_breath_tween = create_tween().set_loops()
 	# 亮起
@@ -495,3 +486,15 @@ func _stop_breath_pulse() -> void:
 	if _breath_tween != null and _breath_tween.is_valid():
 		_breath_tween.kill()
 		_breath_tween = null
+
+
+## 传说级揭示脉冲动画（放大再回弹）
+func _play_legendary_reveal() -> void:
+	if DisplayServer.get_name() == "headless":
+		return
+	pivot_offset = size / 2.0
+	var tween: Tween = create_tween()
+	tween.tween_property(self, "scale", Vector2(Config.LEGENDARY_REVEAL_SCALE, Config.LEGENDARY_REVEAL_SCALE), Config.LEGENDARY_REVEAL_DURATION * 0.5) \
+		.set_ease(Tween.EASE_OUT).set_trans(Tween.TRANS_BACK)
+	tween.tween_property(self, "scale", Vector2.ONE, Config.LEGENDARY_REVEAL_DURATION * 0.5) \
+		.set_ease(Tween.EASE_IN_OUT).set_trans(Tween.TRANS_SINE)
