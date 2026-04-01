@@ -347,11 +347,11 @@ func _flip_back_pair() -> void:
 	_flash_card(pos_a, Color.RED, 0.15)
 	_flash_card(pos_b, Color.RED, 0.15)
 
-	# 翻回
-	var done_count: int = 0
+	# 翻回（用 Array 包装计数器，确保 lambda 共享引用而非值拷贝）
+	var counter: Array[int] = [0]
 	var check_done: Callable = func() -> void:
-		done_count += 1
-		if done_count >= 2:
+		counter[0] += 1
+		if counter[0] >= 2:
 			_animating = false
 	_flip_to_back(pos_a.x, pos_a.y, check_done)
 	_flip_to_back(pos_b.x, pos_b.y, check_done)
@@ -370,10 +370,11 @@ func _match_success_anim(pos_a: Vector2i, pos_b: Vector2i) -> void:
 			_finish_game()
 		return
 
-	var done_count: int = 0
+	# 用 Array 包装计数器，确保 lambda 共享引用而非值拷贝
+	var counter: Array[int] = [0]
 	var check_done: Callable = func() -> void:
-		done_count += 1
-		if done_count >= 2:
+		counter[0] += 1
+		if counter[0] >= 2:
 			_animating = false
 			if _data.is_finished:
 				_finish_game()
