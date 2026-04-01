@@ -60,6 +60,8 @@ func _on_start_rescue() -> void:
 	match minigame_type:
 		"bug_survivor":
 			_start_bug_survivor(business_level)
+		"memory_match":
+			_start_memory_match(business_level)
 		_:
 			_start_code_rescue(business_level)
 
@@ -106,6 +108,28 @@ func _start_bug_survivor(business_level: int) -> void:
 		return
 
 	_rescue_game = survivor_scene.instantiate()
+	add_child(_rescue_game)
+	_rescue_game.setup(preset, business_level)
+	_rescue_game.game_finished.connect(_on_rescue_finished)
+
+
+## ===== 启动素材归档小游戏 =====
+func _start_memory_match(business_level: int) -> void:
+	var preset_res: Resource = load(_event.fight_preset_path)
+	if preset_res == null or not (preset_res is MemoryMatchPreset):
+		push_error("FightEventPopup: 无法加载素材归档预设 %s" % _event.fight_preset_path)
+		_finish_with_conservative()
+		return
+
+	var preset: MemoryMatchPreset = preset_res as MemoryMatchPreset
+
+	var match_scene: PackedScene = load("res://scenes/minigame/memory_match_game.tscn")
+	if match_scene == null:
+		push_error("FightEventPopup: 无法加载素材归档场景")
+		_finish_with_conservative()
+		return
+
+	_rescue_game = match_scene.instantiate()
 	add_child(_rescue_game)
 	_rescue_game.setup(preset, business_level)
 	_rescue_game.game_finished.connect(_on_rescue_finished)

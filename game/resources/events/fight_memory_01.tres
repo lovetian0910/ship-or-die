@@ -1,0 +1,28 @@
+[gd_resource type="Resource" script_class="EventData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/resources/event_data.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+event_id = "fight_memory_01"
+title = "素材库崩溃"
+description = "美术素材库索引损坏，大量文件名丢失！紧急配对归档，找回越多越好。"
+event_type = 1
+search_benefit_type = 0
+search_benefit_value = 0.0
+search_benefit_desc = ""
+search_month_cost = 0
+fight_preset_path = "res://resources/minigame_presets/memory_standard.tres"
+minigame_type = "memory_match"
+fight_conservative_desc = "大量素材丢失，美术返工严重：品质 -5"
+fight_conservative_quality = -5.0
+fight_conservative_month_cost = 1
+fight_steady_desc = "抢救了大部分素材，损失可控"
+fight_steady_quality = 0.0
+fight_steady_month_cost = 0
+fight_risky_desc = "素材全部归档！研发效率不降反升：品质 +3"
+fight_risky_quality = 3.0
+fight_risky_speed_bonus = 0.0
+fight_risky_month_cost = 0
+allowed_phases = [&"early", &"mid", &"late"]
+is_fixed = false

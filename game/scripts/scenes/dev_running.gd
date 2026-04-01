@@ -21,9 +21,8 @@ var _polish_triggered: bool = false
 var _popup_active: bool = false
 var _loading_active: bool = false                ## 格子正在 loading 中
 var _cells_revealed_count: int = 0              ## 当前地图揭开格子计数（不含起点）
-var _total_cells_revealed: int = 0              ## 跨地图累计揭开计数（用于上线提示）
-var _next_launch_prompt_at: int = Config.MAP_LAUNCH_PROMPT_INTERVAL  ## 下次触发上线提示的格数
 var _fight_triggered_count: int = 0             ## 已触发小游戏次数
+var _exit_reached: bool = false                  ## 撤离点是否已连通
 var _last_minigame_type: String = ""            ## 上次小游戏类型（避免连续相同）
 
 ## ===== 预加载弹窗场景 =====
@@ -92,6 +91,9 @@ func _ready() -> void:
 
 	# 绑定按钮
 	launch_button.pressed.connect(_on_launch_pressed)
+	# 上线按钮初始锁定（需要连通撤离点才能解锁）
+	launch_button.disabled = true
+	launch_button.tooltip_text = "需要连通撤离点才能上线"
 
 	# 初始化UI
 	_update_ui()
@@ -99,7 +101,7 @@ func _ready() -> void:
 	# 开场日志
 	if existing_quality <= 0.0:
 		_add_log("%s 研发启动！前方迷雾重重，点击相邻格子探索" % AssetRegistry.emoji_bbcode("📋"))
-		_add_log("%s 格子稀有度越高，消耗时间越长，但奖励也越好！" % AssetRegistry.emoji_bbcode("💡"))
+		_add_log("%s 找到撤离点 %s 才能上线！" % [AssetRegistry.emoji_bbcode("💡"), AssetRegistry.emoji_bbcode("🚀")])
 	else:
 		_add_log("%s 返回研发——继续探索" % AssetRegistry.emoji_bbcode("🔙"))
 
@@ -192,7 +194,6 @@ func _on_cell_loading_finished(row: int, col: int) -> void:
 
 	# 揭开计数（用于保底小游戏触发）
 	_cells_revealed_count += 1
-	_total_cells_revealed += 1
 
 	# 保底机制：每 N 格未触发小游戏，强制变为打类事件
 	if _fight_triggered_count == 0 and _cells_revealed_count >= Config.MAP_GUARANTEED_FIGHT_CELL:
@@ -233,9 +234,10 @@ func _on_cell_loading_finished(row: int, col: int) -> void:
 	# AI竞品上线检查
 	_check_competitor_launches()
 
-	# 检查是否达到上线提示节点（在事件弹窗之后判断）
-	if not _popup_active and _total_cells_revealed >= _next_launch_prompt_at:
-		_trigger_launch_prompt()
+	# 撤离点连通判定
+	if not _exit_reached and not _popup_active and fog_map.check_path_connected():
+		_exit_reached = true
+		_handle_exit_reached()
 		_update_ui()
 		return
 
@@ -367,20 +369,26 @@ func _handle_polish() -> void:
 
 
 func _handle_exit() -> void:
-	_add_log("%s [color=orange]发现上线出口！是否现在上线？[/color]" % AssetRegistry.emoji_bbcode("🚀"))
-	_on_launch_pressed()
+	# 撤离点格子被揭开时的处理（实际上撤离点通过连通判定自动处理）
+	# 此方法保留作为安全兜底
+	if not _exit_reached:
+		_exit_reached = true
+		_handle_exit_reached()
 
 
-## ===== 定期上线提示（探索N格后触发）=====
-func _trigger_launch_prompt() -> void:
+## ===== 撤离点连通处理 =====
+func _handle_exit_reached() -> void:
 	_popup_active = true
 	_disable_all_cells()
 
-	_next_launch_prompt_at += Config.MAP_LAUNCH_PROMPT_INTERVAL
+	# 将撤离点标记为 REVEALED
+	var ep: Vector2i = fog_map.exit_pos
+	fog_map.states[ep.x][ep.y] = FogMap.CellState.REVEALED
+	_refresh_map_visuals()
 
-	_add_log("%s [color=yellow]阶段评审——是否上线？[/color]" % AssetRegistry.emoji_bbcode("📋"))
+	_add_log("%s [color=orange]撤离点已到达！是否现在上线？[/color]" % AssetRegistry.emoji_bbcode("🚀"))
 
-	# 构建简易弹窗
+	# 构建确认弹窗
 	var overlay := ColorRect.new()
 	overlay.color = Color(0, 0, 0, 0.6)
 	overlay.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
@@ -403,7 +411,7 @@ func _trigger_launch_prompt() -> void:
 	vbox.add_theme_constant_override("separation", 14)
 
 	var title := Label.new()
-	title.text = "[i] 阶段评审"
+	title.text = "撤离点已到达！"
 	title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	title.add_theme_font_size_override("font_size", 24)
 	title.add_theme_color_override("font_color", Color("#f0a030"))
@@ -415,7 +423,7 @@ func _trigger_launch_prompt() -> void:
 	var grade_name: String = quality_system.get_display_grade_name()
 	var remaining: int = TimeManager.get_remaining()
 	var desc := Label.new()
-	desc.text = "已探索 %d 格，当前品质：%s\n剩余 %d 个月\n\n是否现在上线？选择继续将重新探索新区域。" % [_total_cells_revealed, grade_name, remaining]
+	desc.text = "当前品质：%s\n剩余 %d 个月\n\n现在上线，还是继续探索周边提升品质？" % [grade_name, remaining]
 	desc.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	desc.add_theme_font_size_override("font_size", 17)
 	desc.add_theme_color_override("font_color", Color(0.85, 0.85, 0.85))
@@ -443,7 +451,7 @@ func _trigger_launch_prompt() -> void:
 	btn_hbox.add_child(launch_btn)
 
 	var continue_btn := Button.new()
-	continue_btn.text = "继续研发"
+	continue_btn.text = "继续探索"
 	continue_btn.custom_minimum_size = Vector2(140, 44)
 	var continue_style := StyleBoxFlat.new()
 	continue_style.bg_color = Color(0.3, 0.3, 0.3)
@@ -466,43 +474,22 @@ func _trigger_launch_prompt() -> void:
 	popup_root.add_child(center)
 	popup_layer.add_child(popup_root)
 
-	launch_btn.pressed.connect(_on_launch_prompt_launch.bind(popup_root))
-	continue_btn.pressed.connect(_on_launch_prompt_continue.bind(popup_root))
+	launch_btn.pressed.connect(_on_exit_launch.bind(popup_root))
+	continue_btn.pressed.connect(_on_exit_continue.bind(popup_root))
 
 
-func _on_launch_prompt_launch(popup: Control) -> void:
+func _on_exit_launch(popup: Control) -> void:
 	popup.queue_free()
 	_popup_active = false
 	_on_launch_pressed()
 
 
-func _on_launch_prompt_continue(popup: Control) -> void:
+func _on_exit_continue(popup: Control) -> void:
 	popup.queue_free()
 	_popup_active = false
-	_add_log("%s [color=cyan]决定继续研发——重新探索新区域[/color]" % AssetRegistry.emoji_bbcode("🔄"))
-	_reset_map()
+	_add_log("%s [color=cyan]决定继续探索——提升品质再上线[/color]" % AssetRegistry.emoji_bbcode("🔄"))
 	_enable_clickable_cells()
 	_update_ui()
-
-
-## ===== 重置地图（保留时间和品质）=====
-func _reset_map() -> void:
-	# 清空旧地图 UI
-	for child in map_grid.get_children():
-		child.queue_free()
-	_cell_nodes.clear()
-
-	# 重置当前地图计数（跨地图累计不重置）
-	_cells_revealed_count = 0
-	_fight_triggered_count = 0
-
-	# 生成新地图
-	fog_map = FogMapGenerator.generate()
-
-	# 重建 UI
-	_build_map_grid()
-
-	_add_log("%s 进入新区域，继续探索！" % AssetRegistry.emoji_bbcode("🗺️"))
 
 
 ## ===== 辅助：找搜类/打类事件 =====
@@ -531,6 +518,7 @@ const FALLBACK_FIGHT_EVENTS: Array[String] = [
 	"res://resources/events/fight_external_01.tres",
 	"res://resources/events/fight_survivor_01.tres",
 	"res://resources/events/fight_survivor_02.tres",
+	"res://resources/events/fight_memory_01.tres",
 ]
 
 func _load_fallback_fight_event() -> EventData:
@@ -820,7 +808,10 @@ func _enable_clickable_cells() -> void:
 		for col: int in range(FogMap.MAP_SIZE):
 			var cell_node: Button = _cell_nodes[row][col]
 			var state: FogMap.CellState = fog_map.get_cell_state(row, col)
-			cell_node.disabled = state != FogMap.CellState.FOGGY
+			if state == FogMap.CellState.FOGGY and fog_map.get_cell_type(row, col) != FogMap.CellType.EXIT:
+				cell_node.disabled = false
+			else:
+				cell_node.disabled = true
 
 
 ## ===== UI 刷新 =====
@@ -846,8 +837,12 @@ func _update_ui() -> void:
 		bottom_hint.text = "时间已耗尽"
 		_disable_all_cells()
 
-	# 强制上线按钮
-	launch_button.disabled = _popup_active
+	# 上线按钮：连通撤离点后才可用
+	launch_button.disabled = _popup_active or not _exit_reached
+	if _exit_reached:
+		launch_button.tooltip_text = "上线发布"
+	else:
+		launch_button.tooltip_text = "需要连通撤离点才能上线"
 
 	# 刷新竞争态势栏
 	_refresh_competitor_panel()

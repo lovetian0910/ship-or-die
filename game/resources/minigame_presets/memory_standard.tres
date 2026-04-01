@@ -1,0 +1,14 @@
+[gd_resource type="Resource" script_class="MemoryMatchPreset" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/resources/memory_match_preset.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+preset_id = "memory_standard"
+preset_name = "素材归档"
+flavor_text = "美术素材库索引损坏，大量文件名丢失！紧急配对归档，找回越多越好。"
+grid_rows = 3
+grid_cols = 4
+time_limit = 15.0
+flip_duration = 0.3
+peek_duration = 0.5
