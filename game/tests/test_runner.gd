@@ -147,6 +147,11 @@ func _run_autoload_tests() -> void:
 	_assert(Config.INITIAL_MONEY == 600, "初始金钱 = 600")
 	_assert(Config.MIN_MONEY == 300, "保底金钱 = 300")
 
+	# 迷雾地图新常量
+	_assert(Config.MAP_EXIT_COUNT == 1, "MAP_EXIT_COUNT=1")
+	_assert(Config.MAP_EXIT_ALWAYS_VISIBLE == true, "MAP_EXIT_ALWAYS_VISIBLE=true")
+	_assert(Config.MAP_GLOW_ALPHA > 0.0, "MAP_GLOW_ALPHA>0")
+
 	_assert(
 		GameManager.current_state == GameManager.GameState.MENU,
 		"初始状态 = MENU"

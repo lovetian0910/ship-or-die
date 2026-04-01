@@ -109,6 +109,21 @@ const DEV_AUTO_ADVANCE_MONTHS: int = 3          ## 节点间自动推进消耗
 const MAP_SIZE: int = 8                         ## 地图尺寸 8×8
 const MAP_GUARANTEED_FIGHT_CELL: int = 5        ## 第N格必定触发小游戏（保底机制）
 
+## 撤离点
+const MAP_EXIT_COUNT: int = 1                   ## 撤离点固定1个
+const MAP_EXIT_MIN_DISTANCE: int = 5            ## 撤离点距起点最小曼哈顿距离
+const MAP_EXIT_ALWAYS_VISIBLE: bool = true      ## 撤离点开局即可见
+const MAP_EXIT_BORDER_COLOR: Color = Color(1.0, 0.6, 0.2) ## 撤离点橙色边框
+
+## 稀有度光晕（2档制：暗格/亮格）
+const MAP_GLOW_COLOR: Color = Color(0.9, 0.85, 0.7)  ## 亮格统一光晕颜色（暖白）
+const MAP_GLOW_ALPHA: float = 0.20                     ## 亮格光晕透明度
+const MAP_GLOW_RARITY_THRESHOLD: int = 2               ## 稀有度≥RARE(2)显示光晕
+
+## 传说级揭示特效
+const LEGENDARY_REVEAL_SCALE: float = 1.15      ## 传说揭示脉冲缩放
+const LEGENDARY_REVEAL_DURATION: float = 0.3    ## 传说揭示脉冲时长（秒）
+
 ## 稀有度对应的研发月数消耗（稀有度越高开格子越贵）
 const RARITY_MONTH_COST: Dictionary = {
 	"COMMON": 1,
@@ -127,23 +142,18 @@ const RARITY_LOADING_DURATION: Dictionary = {
 	"LEGENDARY": 2.5,
 }
 
-## 探索多少格后弹出上线提示（选择不上线则重置地图继续探索）
-const MAP_LAUNCH_PROMPT_INTERVAL: int = 10
-
 ## 格子类型分布比例
 const MAP_CELL_RATIOS: Dictionary = {
 	"empty": 0.30,          ## 空地 ~19格
 	"search_event": 0.18,   ## 搜类事件 ~11格
 	"fight_event": 0.22,    ## 打类事件(危机) ~14格
 	"treasure": 0.10,       ## 宝箱 ~6格
-	"exit": 0.05,           ## 上线出口 ~3格
 	"wall": 0.10,           ## 路障 ~6格
 }
 
 ## 特殊格子（固定数量，不参与比例分配）
 const MAP_PLAYTEST_COUNT: int = 1               ## 内测节点（中部区域）
 const MAP_POLISH_COUNT: int = 1                 ## 打磨节点（边缘区域）
-const MAP_EXIT_MIN_DISTANCE: int = 5            ## 上线出口距起点最小曼哈顿距离
 const MAP_WALL_MAX: int = 8                     ## 路障最大数量
 
 ## 空地品质范围
