@@ -1,6 +1,18 @@
 # config.gd — 数值配置常量集中管理
 extends Node
 
+
+## 格式化金钱显示（10000 → "1万"，123456 → "12.3万"，1234 → "1234"）
+static func format_money(amount: int) -> String:
+	if absi(amount) >= 10000:
+		var wan: float = float(amount) / 10000.0
+		if absf(wan - roundf(wan)) < 0.01:
+			return "%d万" % int(wan)
+		else:
+			return "%.1f万" % wan
+	return "%d" % amount
+
+
 func _ready() -> void:
 	# 设置 Emoji 字体为中文字体的 fallback（Web 端无系统字体）
 	var main_font: FontFile = load("res://assets/fonts/NotoSansSC-Regular.ttf") as FontFile

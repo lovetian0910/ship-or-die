@@ -26,7 +26,7 @@ func setup(data: EntryResourceData) -> void:
 		await ready
 	name_label.text = data.display_name
 	desc_label.text = data.description
-	price_label.text = "$ %d" % data.price
+	price_label.text = "¥%s" % Config.format_money(data.price)
 
 	# 加载头像
 	var portrait_key: String = _get_portrait_key(data)

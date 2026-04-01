@@ -103,8 +103,8 @@ func _refresh_ui() -> void:
 	var total_cost: int = _get_total_cost()
 
 	# 更新金钱和总价显示
-	money_label.text = "持有金钱: %d" % current_money
-	total_label.text = "已选总价: %d / %d" % [total_cost, current_money]
+	money_label.text = "持有金钱: ¥%s" % Config.format_money(current_money)
+	total_label.text = "已选总价: ¥%s / ¥%s" % [Config.format_money(total_cost), Config.format_money(current_money)]
 
 	# 总价颜色提示
 	if total_cost > current_money:

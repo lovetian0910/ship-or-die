@@ -177,7 +177,7 @@ func _setup_success() -> void:
 
 	# 预填文字
 	total_label.text = "本局总收入：¥0"
-	money_label.text = "%s 当前金钱：¥%d" % [AssetRegistry.emoji_bbcode("💰"), current_money]
+	money_label.text = "%s 当前金钱：¥%s" % [AssetRegistry.emoji_bbcode("💰"), Config.format_money(current_money)]
 
 	# ---- Tween 动画编排 ----
 	var tween: Tween = create_tween()
@@ -248,11 +248,11 @@ func _setup_failure() -> void:
 
 	# 总计损失文案（随机选一条）
 	var loss_quips: Array[String] = [
-		"总计损失：¥%d——够在大城市交两个月车位租金了。" % total_loss,
-		"总计损失：¥%d——这些钱本来可以买%d杯奶茶。" % [total_loss, total_loss / 30],
+		"总计损失：¥%s——够在大城市交两个月车位租金了。" % Config.format_money(total_loss),
+		"总计损失：¥%s——这些钱本来可以买%d杯奶茶。" % [Config.format_money(total_loss), total_loss / 30],
 	]
 	total_label.text = "总计损失：¥0"
-	money_label.text = "%s 剩余金钱：¥%d" % [AssetRegistry.emoji_bbcode("💰"), current_money]
+	money_label.text = "%s 剩余金钱：¥%s" % [AssetRegistry.emoji_bbcode("💰"), Config.format_money(current_money)]
 
 	# ---- Tween 动画编排 ----
 	var tween: Tween = create_tween()
@@ -343,7 +343,7 @@ func _animate_loss_mark(label: Label) -> void:
 
 ## 数字滚动：成功总收入
 func _update_success_total(value: int) -> void:
-	total_label.text = "本局总收入：¥%d" % value
+	total_label.text = "本局总收入：¥%s" % Config.format_money(value)
 
 
 ## 数字滚动：失败总损失
@@ -351,7 +351,7 @@ func _update_fail_total(value: int, final_value: int, final_quip: String) -> voi
 	if value >= final_value:
 		total_label.text = final_quip
 	else:
-		total_label.text = "总计损失：¥%d" % value
+		total_label.text = "总计损失：¥%s" % Config.format_money(value)
 
 
 ## 按钮淡入
@@ -378,7 +378,7 @@ func _create_success_item(entry: Dictionary) -> HBoxContainer:
 	var value_label := Label.new()
 	var val: int = int(entry.get("value", 0))
 	if val >= 0:
-		value_label.text = "+¥%d" % val
+		value_label.text = "+¥%s" % Config.format_money(val)
 		value_label.add_theme_color_override("font_color", Color(0.2, 0.9, 0.3))
 	else:
 		# 热度加成等非金额行
@@ -427,7 +427,7 @@ func _create_failure_item(res: Dictionary) -> HBoxContainer:
 	hbox.add_child(name_label)
 
 	var cost_label := Label.new()
-	cost_label.text = "¥%d" % int(res.get("cost", 0))
+	cost_label.text = "¥%s" % Config.format_money(int(res.get("cost", 0)))
 	hbox.add_child(cost_label)
 
 	# 损失描述
