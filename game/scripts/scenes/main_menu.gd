@@ -25,6 +25,12 @@ func _add_test_button() -> void:
 	test_btn.pressed.connect(_on_test_survivor)
 	vbox.add_child(test_btn)
 
+	var memory_btn := Button.new()
+	memory_btn.text = "[MEM] 测试素材归档"
+	memory_btn.custom_minimum_size = Vector2(200, 50)
+	memory_btn.pressed.connect(_on_test_memory_match)
+	vbox.add_child(memory_btn)
+
 
 func _on_test_survivor() -> void:
 	# 加载预设
@@ -51,6 +57,25 @@ func _on_test_survivor() -> void:
 func _on_test_finished(_result: String, _survival_rate: float, game_instance: Control) -> void:
 	game_instance.queue_free()
 	visible = true
+
+
+func _on_test_memory_match() -> void:
+	var preset: MemoryMatchPreset = load("res://resources/minigame_presets/memory_standard.tres") as MemoryMatchPreset
+	if preset == null:
+		push_error("无法加载 memory_standard 预设")
+		return
+
+	var scene: PackedScene = load("res://scenes/minigame/memory_match_game.tscn")
+	if scene == null:
+		push_error("无法加载素材归档场景")
+		return
+
+	var game_instance: Control = scene.instantiate()
+	get_tree().root.add_child(game_instance)
+	game_instance.setup(preset, 1)
+	game_instance.game_finished.connect(_on_test_finished.bind(game_instance))
+
+	visible = false
 
 
 ## ===== 设置背景图 =====
