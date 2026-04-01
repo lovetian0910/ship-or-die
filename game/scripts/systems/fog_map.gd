@@ -23,6 +23,7 @@ var cells: Array = []       ## [row][col] = CellType
 var states: Array = []      ## [row][col] = CellState
 var rarities: Array = []    ## [row][col] = Rarity（稀有度）
 var start_pos: Vector2i = Vector2i.ZERO
+var exit_pos: Vector2i = Vector2i(-1, -1)      ## 撤离点位置
 
 ## 预放置格子集合（这些格子在生成时已确定类型，不走延迟随机）
 var _preplaced: Dictionary = {}  ## Vector2i -> true
@@ -185,6 +186,66 @@ func _make_neighbors_foggy(row: int, col: int) -> void:
 				states[n.x][n.y] = CellState.REVEALED
 			else:
 				states[n.x][n.y] = CellState.FOGGY
+
+
+## 检查起点到撤离点是否通过 REVEALED 格子连通
+## 连通条件：撤离点的某个邻格为 REVEALED（不要求撤离点本身 REVEALED）
+func check_path_connected() -> bool:
+	if exit_pos == Vector2i(-1, -1):
+		return false
+	# 检查撤离点是否有已揭示的邻居
+	var exit_has_revealed_neighbor: bool = false
+	for n: Vector2i in get_neighbors(exit_pos.x, exit_pos.y):
+		if states[n.x][n.y] == CellState.REVEALED:
+			exit_has_revealed_neighbor = true
+			break
+	if not exit_has_revealed_neighbor:
+		return false
+	# BFS：从起点出发，只走 REVEALED 格子，看能否到达撤离点的邻格
+	var visited: Dictionary = {}
+	var queue: Array[Vector2i] = [start_pos]
+	visited[start_pos] = true
+	while queue.size() > 0:
+		var current: Vector2i = queue.pop_front()
+		# 检查是否到达撤离点邻格
+		for n: Vector2i in get_neighbors(exit_pos.x, exit_pos.y):
+			if current == n:
+				return true
+		for n: Vector2i in get_neighbors(current.x, current.y):
+			if n not in visited and states[n.x][n.y] == CellState.REVEALED:
+				visited[n] = true
+				queue.append(n)
+	return false
+
+
+## 寻找从 from 到 to 的最短路径（BFS，忽略状态，只避开 WALL）
+## 返回路径数组（不含 from，含 to 的邻格但不含 to 本身）
+func find_shortest_path(from: Vector2i, to: Vector2i) -> Array[Vector2i]:
+	var visited: Dictionary = {}
+	var parent: Dictionary = {}
+	var queue: Array[Vector2i] = [from]
+	visited[from] = true
+
+	while queue.size() > 0:
+		var current: Vector2i = queue.pop_front()
+		# 到达 to 的邻格即算完成
+		for n: Vector2i in get_neighbors(to.x, to.y):
+			if current == n:
+				# 回溯路径
+				var path: Array[Vector2i] = []
+				var step: Vector2i = current
+				while step != from:
+					path.append(step)
+					step = parent[step] as Vector2i
+				path.reverse()
+				return path
+		for n: Vector2i in get_neighbors(current.x, current.y):
+			if n not in visited and cells[n.x][n.y] != CellType.WALL:
+				visited[n] = true
+				parent[n] = current
+				queue.append(n)
+
+	return [] as Array[Vector2i]
 
 
 ## 内部：边界检查

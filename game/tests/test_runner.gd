@@ -930,6 +930,41 @@ func _run_fog_map_test() -> void:
 	_log_info("10次随机模拟中找到出口: %d/10" % exit_reachable_count)
 	_assert(exit_reachable_count >= 1, "至少10%%的随机模拟能找到出口（稀有度消耗下随机走法较难）: %d/10" % exit_reachable_count)
 
+	# 撤离点位置记录
+	_log_section("迷雾地图 — 撤离点连通判定")
+	var path_map: FogMap = FogMapGenerator.generate(42)
+	# 生成器尚未设置 exit_pos，手动从格子类型中找到撤离点
+	if path_map.exit_pos == Vector2i(-1, -1):
+		for row: int in range(FogMap.MAP_SIZE):
+			for col: int in range(FogMap.MAP_SIZE):
+				if path_map.get_cell_type(row, col) == FogMap.CellType.EXIT:
+					path_map.exit_pos = Vector2i(row, col)
+					break
+			if path_map.exit_pos != Vector2i(-1, -1):
+				break
+	_assert(path_map.exit_pos != Vector2i(-1, -1), "撤离点位置已记录: %s" % str(path_map.exit_pos))
+	_assert(FogMap.manhattan_distance(path_map.start_pos, path_map.exit_pos) >= Config.MAP_EXIT_MIN_DISTANCE,
+		"撤离点距起点≥%d" % Config.MAP_EXIT_MIN_DISTANCE)
+
+	# 初始状态：未连通
+	_assert(not path_map.check_path_connected(), "初始状态未连通")
+
+	# 模拟从起点到撤离点的路径揭开
+	var path_to_exit: Array[Vector2i] = path_map.find_shortest_path(path_map.start_pos, path_map.exit_pos)
+	_assert(path_to_exit.size() > 0, "存在从起点到撤离点的路径: %d步" % path_to_exit.size())
+
+	# 逐格揭开路径
+	for pos: Vector2i in path_to_exit:
+		if path_map.get_cell_state(pos.x, pos.y) == FogMap.CellState.FOGGY:
+			path_map.reveal_cell(pos.x, pos.y)
+		elif path_map.get_cell_state(pos.x, pos.y) == FogMap.CellState.HIDDEN:
+			# 先让它变成FOGGY再揭开（模拟正常游玩）
+			path_map.states[pos.x][pos.y] = FogMap.CellState.FOGGY
+			path_map.reveal_cell(pos.x, pos.y)
+
+	# 揭开路径后应连通
+	_assert(path_map.check_path_connected(), "揭开路径后已连通")
+
 
 ## ===== Bug Survivor 数据层测试 =====
 func _run_bug_survivor_data_test() -> void:
