@@ -248,8 +248,9 @@ func _setup_failure() -> void:
 
 	# 总计损失文案（随机选一条）
 	var loss_quips: Array[String] = [
-		"总计损失：¥%s——够在大城市交两个月车位租金了。" % Config.format_money(total_loss),
-		"总计损失：¥%s——这些钱本来可以买%d杯奶茶。" % [Config.format_money(total_loss), total_loss / 30],
+		"总计损失：¥%s——够在三线城市付一套房的首付了。" % Config.format_money(total_loss),
+		"总计损失：¥%s——这些钱本来可以给全公司发%d个月工资。" % [Config.format_money(total_loss), total_loss / 100000],
+		"总计损失：¥%s——投资人的脸色比代码里的bug还难看。" % Config.format_money(total_loss),
 	]
 	total_label.text = "总计损失：¥0"
 	money_label.text = "%s 剩余金钱：¥%s" % [AssetRegistry.emoji_bbcode("💰"), Config.format_money(current_money)]
