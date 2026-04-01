@@ -402,7 +402,7 @@ func _get_rarity_glow_color() -> Color:
 		return Color(0, 0, 0, 0)
 
 
-## 揭示时的背景色：稀有度颜色（预放置特殊格子用类型颜色）
+## 揭示时的背景色：稀有度颜色（预放置特殊格子和打类事件用类型颜色）
 func _get_rarity_reveal_color() -> Color:
 	# 预放置特殊格子保持类型颜色
 	match cell_type:
@@ -414,6 +414,8 @@ func _get_rarity_reveal_color() -> Color:
 			return COLOR_POLISH
 		FogMap.CellType.EXIT:
 			return COLOR_EXIT
+		FogMap.CellType.FIGHT_EVENT:
+			return COLOR_FIGHT
 	# 普通格子用稀有度颜色
 	var rarity_name: String = FogMap.RARITY_NAMES[rarity]
 	var level_data: Dictionary = Config.RARITY_LEVELS.get(rarity_name, {})
