@@ -77,6 +77,9 @@ func _process(_delta: float) -> void:
 			_test_phase = 16
 		16:
 			_run_minigame_no_repeat_test()
+			_test_phase = 17
+		17:
+			_run_memory_match_data_test()
 			_test_phase = 99
 		99:
 			_print_summary()
@@ -1250,6 +1253,108 @@ func _simulate_standing_still(p_preset: BugSurvivorPreset) -> float:
 			bi -= 1
 
 	return 60.0  # 存活到结束
+
+
+## ===== 素材归档数据层测试 =====
+func _run_memory_match_data_test() -> void:
+	_log_section("素材归档（记忆翻牌）数据层测试")
+
+	# 创建预设
+	var preset := MemoryMatchPreset.new()
+	preset.preset_id = "test"
+	preset.preset_name = "测试预设"
+	preset.grid_rows = 3
+	preset.grid_cols = 4
+	preset.time_limit = 15.0
+	preset.flip_duration = 0.3
+	preset.peek_duration = 0.5
+
+	# 初始化
+	var data := MemoryMatchData.new()
+	data.setup(preset)
+	_assert(data.total_pairs == 6, "总对数=6: %d" % data.total_pairs)
+	_assert(data.matched_pairs == 0, "初始配对=0")
+	_assert(not data.is_finished, "初始未结束")
+	_assert(data.get_completion_rate() == 0.0, "初始完成率=0")
+
+	# 网格验证：12格，6种ID各出现2次
+	var id_counts: Dictionary = {}
+	for row: int in range(3):
+		for col: int in range(4):
+			var card_id: int = data.grid[row][col]
+			_assert(card_id >= 0 and card_id < 6, "卡牌ID合法: %d" % card_id)
+			var cur: int = id_counts.get(card_id, 0) as int
+			id_counts[card_id] = cur + 1
+	for id: int in range(6):
+		_assert(id_counts.get(id, 0) as int == 2, "ID %d 出现2次: %d" % [id, id_counts.get(id, 0) as int])
+
+	# 翻牌测试：翻第一张
+	var r1: MemoryMatchData.PickResult = data.pick_card(0, 0)
+	_assert(r1 == MemoryMatchData.PickResult.FIRST_REVEALED, "第一张翻开: %d" % r1)
+	_assert(data.revealed[0][0] == true, "第一张已翻开")
+
+	# 找一个配对的位置
+	var first_id: int = data.grid[0][0]
+	var match_pos: Vector2i = Vector2i(-1, -1)
+	for row: int in range(3):
+		for col: int in range(4):
+			if Vector2i(row, col) != Vector2i(0, 0) and data.grid[row][col] == first_id:
+				match_pos = Vector2i(row, col)
+				break
+		if match_pos != Vector2i(-1, -1):
+			break
+
+	# 翻第二张（配对成功）
+	var r2: MemoryMatchData.PickResult = data.pick_card(match_pos.x, match_pos.y)
+	_assert(r2 == MemoryMatchData.PickResult.MATCH_SUCCESS, "配对成功: %d" % r2)
+	_assert(data.matched[0][0] == true, "第一张已消除")
+	_assert(data.matched[match_pos.x][match_pos.y] == true, "第二张已消除")
+	_assert(data.matched_pairs == 1, "配对数=1")
+
+	# 无效操作：点击已消除的牌
+	var r3: MemoryMatchData.PickResult = data.pick_card(0, 0)
+	_assert(r3 == MemoryMatchData.PickResult.INVALID, "已消除牌不可点击")
+
+	# 配对失败测试：找两张不同的未消除牌
+	var pos_a: Vector2i = Vector2i(-1, -1)
+	var pos_b: Vector2i = Vector2i(-1, -1)
+	for row: int in range(3):
+		for col: int in range(4):
+			if not data.matched[row][col]:
+				if pos_a == Vector2i(-1, -1):
+					pos_a = Vector2i(row, col)
+				elif data.grid[row][col] != data.grid[pos_a.x][pos_a.y] and pos_b == Vector2i(-1, -1):
+					pos_b = Vector2i(row, col)
+		if pos_b != Vector2i(-1, -1):
+			break
+
+	if pos_a != Vector2i(-1, -1) and pos_b != Vector2i(-1, -1):
+		var r4: MemoryMatchData.PickResult = data.pick_card(pos_a.x, pos_a.y)
+		_assert(r4 == MemoryMatchData.PickResult.FIRST_REVEALED, "翻开A")
+		var r5: MemoryMatchData.PickResult = data.pick_card(pos_b.x, pos_b.y)
+		_assert(r5 == MemoryMatchData.PickResult.MATCH_FAIL, "配对失败: %d" % r5)
+		# 失败后两张牌翻回
+		_assert(data.revealed[pos_a.x][pos_a.y] == false, "失败后A翻回")
+		_assert(data.revealed[pos_b.x][pos_b.y] == false, "失败后B翻回")
+
+	# 时间耗尽测试
+	var data2 := MemoryMatchData.new()
+	data2.setup(preset)
+	data2.advance_time(16.0)
+	_assert(data2.is_finished, "时间耗尽后结束")
+	_assert(data2.get_result_tier() == "conservative", "0配对=conservative: %s" % data2.get_result_tier())
+
+	# 结果等级验证
+	var data3 := MemoryMatchData.new()
+	data3.setup(preset)
+	# 手动设置配对数来验证等级
+	data3.matched_pairs = 6
+	_assert(data3.get_completion_rate() == 1.0, "6/6=1.0")
+	_assert(data3.get_result_tier() == "risky", "6/6=risky")
+	data3.matched_pairs = 4
+	_assert(data3.get_result_tier() == "steady", "4/6=steady: %s" % data3.get_result_tier())
+	data3.matched_pairs = 2
+	_assert(data3.get_result_tier() == "conservative", "2/6=conservative: %s" % data3.get_result_tier())
 
 
 ## ===== 汇总 =====
