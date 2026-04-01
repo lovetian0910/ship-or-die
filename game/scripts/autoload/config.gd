@@ -22,14 +22,14 @@ const MINIGAME_DISPLAY_HOURS: int = 480          ## 小游戏UI显示工时（48
 const MINIGAME_MONTH_COST: int = 2               ## 小游戏结束后消耗的月数
 
 ## ===== 经济 =====
-const INITIAL_MONEY: int = 600                  ## 初始金钱
-const MIN_MONEY: int = 300                      ## 保底金钱（至少能买3个低级）
+const INITIAL_MONEY: int = 600000                ## 初始金钱（60万）
+const MIN_MONEY: int = 300000                    ## 保底金钱（30万，至少能买3个低级）
 
 ## ===== 入场资源价格 =====
 const RESOURCE_PRICES: Dictionary = {
-	"creator":   { 1: 100, 2: 300, 3: 600 },
-	"outsource": { 1: 100, 2: 300, 3: 600 },
-	"business":  { 1: 100, 2: 300, 3: 600 },
+	"creator":   { 1: 100000, 2: 300000, 3: 600000 },
+	"outsource": { 1: 100000, 2: 300000, 3: 600000 },
+	"business":  { 1: 100000, 2: 300000, 3: 600000 },
 }
 
 ## ===== 品质上限（按主创等级）=====
@@ -77,8 +77,8 @@ const EVENT_CRISIS_STEADY_COST: int = 1         ## 稳妥选项
 const EVENT_CRISIS_RISKY_COST: int = 3          ## 冒险选项
 
 ## ===== 结算：市场参数 =====
-const SETTLEMENT_USERS_MIN: int = 2400          ## 用户池下限
-const SETTLEMENT_USERS_MAX: int = 4800          ## 用户池上限
+const SETTLEMENT_USERS_MIN: int = 2400000        ## 用户池下限
+const SETTLEMENT_USERS_MAX: int = 4800000        ## 用户池上限
 const SETTLEMENT_PAY_MIN: float = 0.6           ## 付费能力下限
 const SETTLEMENT_PAY_MAX: float = 1.25          ## 付费能力上限
 

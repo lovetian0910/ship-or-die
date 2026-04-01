@@ -147,8 +147,8 @@ func _run_autoload_tests() -> void:
 	_assert(has_ai, "AICompetitors 已加载")
 
 	_assert(Config.TIME_TOTAL_MONTHS == 36, "总月份 = 36")
-	_assert(Config.INITIAL_MONEY == 600, "初始金钱 = 600")
-	_assert(Config.MIN_MONEY == 300, "保底金钱 = 300")
+	_assert(Config.INITIAL_MONEY == 600000, "初始金钱 = 600000")
+	_assert(Config.MIN_MONEY == 300000, "保底金钱 = 300000")
 
 	# 迷雾地图新常量
 	_assert(Config.MAP_EXIT_COUNT == 1, "MAP_EXIT_COUNT=1")
