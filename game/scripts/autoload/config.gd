@@ -201,3 +201,11 @@ const BUG_SURVIVOR_SPAWN_CURVE: Array = [
 	{"time_start": 15.0, "spawn_interval": 0.35, "speed_multiplier": 2.0},
 	{"time_start": 22.0, "spawn_interval": 0.25, "speed_multiplier": 2.4},
 ]
+
+## ===== 素材归档小游戏 =====
+const MEMORY_MATCH_TIME_LIMIT: float = 15.0      ## 时限（秒）
+const MEMORY_MATCH_GRID_ROWS: int = 3             ## 行数
+const MEMORY_MATCH_GRID_COLS: int = 4             ## 列数
+const MEMORY_MATCH_FLIP_DURATION: float = 0.3     ## 翻牌动画时长（秒）
+const MEMORY_MATCH_PEEK_DURATION: float = 0.5     ## 配对失败停留时长（秒）
+const MEMORY_MATCH_MONTH_COST: int = 2            ## 小游戏消耗月数
